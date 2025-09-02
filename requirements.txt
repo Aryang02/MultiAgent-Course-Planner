@@ -1,0 +1,7 @@
+langchain
+google-generativeai
+google-genai
+pinecone-client
+langchain-google-genai
+python-dotenv
+fastapi
