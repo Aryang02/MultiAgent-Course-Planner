@@ -5,3 +5,13 @@ pinecone-client
 langchain-google-genai
 python-dotenv
 fastapi
+bcrypt
+uvicorn
+sqlalchemy
+psycopg2-binary
+pydantic
+python-multipart
+python-docx
+Pillow
+langchain-community
+jose

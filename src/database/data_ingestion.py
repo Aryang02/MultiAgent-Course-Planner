@@ -1,4 +1,4 @@
-from langchain.embeddings import GoogleVertexAIEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings 
 import os
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.document_loaders import PyPDFLoader
@@ -13,7 +13,7 @@ class DataIngestion:
         self.index = self.create_or_update_index(index_name)
         if not self.index:
             raise Exception("Failed to create or connect to Pinecone index")
-        self.embeddings = GoogleVertexAIEmbeddings()
+        self.embeddings = GoogleGenerativeAIEmbeddings()
         self.pc = PineconeVectorStore(api_key = os.getenv("PINECONE_API_KEY"), index=self.index, embeddings = self.embeddings)
 
     def embed_docs(self, documents):
@@ -38,23 +38,23 @@ class DataIngestion:
         except Exception as e:
             raise Exception(f"Failed to create or connect to index: {str(e)}")
     
-    def load_docs(self, documents):
+    def load_docs(self, user_id, documents):
         # Load documents from the specified file path
         try:
             pages = []
             for doc in documents:
                 loader = PyPDFLoader(file_path=doc)
                 for page in loader.load_and_split():
+                    page.metadata['user_id'] = user_id
                     pages.append(page)
             return pages
         except Exception as e:
             raise Exception(f"Failed to load documents: {str(e)}")
     
-    def upsert_data(self, documents, index_name = "vector_db_index"):
+    def upsert_data(self, user_id, documents, index_name = "vector_db_index"):
         # Upsert embedded documents into Pinecone index
         try:
-            documents = self.load_docs(documents)
-            # embedded_docs = self.embed_docs(documents)
+            documents = self.load_docs(user_id, documents)
             self.pc.add_documents(index_name=index_name, documents=documents)
         except Exception as e:
             raise Exception(f"Failed to upsert data: {str(e)}")
@@ -64,7 +64,7 @@ class DataIngestion:
         try:
             if not os.path.exists(os.path.join(os.getcwd(), upload_dir)):
                 os.makedirs(os.path.join(os.getcwd(), upload_dir))
-            file_paths = [os.path.join(upload_dir, f) for f in os.listdir(upload_dir) if f.endswith('.pdf')]
+            file_paths = [os.path.join(upload_dir, f) for f in os.listdir(upload_dir) if f.endswith(('.pdf', '.txt', '.docx', '.png', '.jpg'))]
             return file_paths
         except Exception as e:
             raise Exception(f"Failed to save files: {str(e)}")

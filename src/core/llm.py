@@ -1,11 +1,11 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
-from data_ingestion import DataIngestion
+from database.data_ingestion import DataIngestion
 
 class LLM:
     def __init__(self):
         self.llm = self.initialize_llm()
 
-    def initialize_llm(self, model_name="gemini-2.5-flash", max_tokens=None):
+    def initialize_llm(self, model_name="gemini-1.5-flash", max_tokens=None):
         # Initialize the Google Generative AI model with desired parameters
         return ChatGoogleGenerativeAI(
             model=model_name,
