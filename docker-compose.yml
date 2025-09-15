@@ -1,28 +1,47 @@
-services:
-  app:
-    build: .
-    container_name: mcp_app
-    command: ["./entrypoint.sh"]
-    ports:
-      - "8000:8000"
-    volumes:
-      - .:/app
-    env_file:
-      - ./.env
-    depends_on:
-      - db
+version: "3.9"
 
-  db:
-    image: postgres:latest
+services:
+  mcp_db:
+    image: postgres:15
     container_name: mcp_db
+    restart: always
     environment:
       POSTGRES_USER: admin
-      POSTGRES_PASSWORD: nerd@123
+      POSTGRES_PASSWORD: admin123
       POSTGRES_DB: demo
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
-  
+      - postgres_data:/var/lib/postgresql/data
+
+  mcp_app:
+    build: ./src/core
+    container_name: mcp_app
+    restart: always
+    depends_on:
+      - mcp_db
+      - mcp_agents
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/app
+    command: ["./entrypoint.sh"]
+
+  mcp_agents:
+    build: ./src/agents
+    container_name: mcp_agents
+    restart: always
+    depends_on:
+      - mcp_db
+    env_file:
+      - .env
+    ports:
+      - "8500:8500"
+    volumes:
+      - ./src/agents:/app
+    command: ["python", "server.py"]
+
 volumes:
-  pgdata:
+  postgres_data:

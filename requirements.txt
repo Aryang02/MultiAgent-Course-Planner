@@ -1,6 +1,4 @@
-langchain
 google-generativeai
-google-genai
 pinecone-client
 langchain-google-genai
 python-dotenv
@@ -14,4 +12,8 @@ python-multipart
 python-docx
 Pillow
 langchain-community
-jose
+python-jose
+langchain
+streamlit
+langchain-pinecone
+pinecone

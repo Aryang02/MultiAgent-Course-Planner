@@ -16,5 +16,6 @@ class Settings:
     EMAIL_PORT: int = int(os.getenv("EMAIL_PORT", 465))
     EMAIL_HOST_USER: str = os.getenv("EMAIL_HOST_USER")
     EMAIL_HOST_PASSWORD: str = os.getenv("EMAIL_HOST_PASSWORD")
+    APP_URL: str = os.getenv("APP_URL", "http://localhost")
 
 settings = Settings()

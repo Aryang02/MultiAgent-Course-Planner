@@ -4,7 +4,7 @@ import uuid
 import datetime
 
 class User(BaseModel):
-    id: uuid
+    id: uuid 
     name: str
     email: str
     password: str
