@@ -7,7 +7,7 @@ class TutorAgent(BaseAgent):
         super().__init__(instruction=TUTOR_SYSTEM_PROMPT,
                          description=TUTOR_DESCRIPTION,
                          name="critic")
-        self.mcp_client = McpConnector('critic_server')
+        self.mcp_client = McpConnector('tutor_server')
         self.tools = self.mcp_client.get_tools()
 
     async def explain(self, question: str):

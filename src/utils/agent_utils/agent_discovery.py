@@ -4,15 +4,14 @@ import logging
 from typing import List
 
 import httpx                         
-from models.agent import AgentCard  
+from src.serializers.agents import AgentCard  
 
-# Create a named logger for this module; __name__ is the module's name
 logger = logging.getLogger(__name__)
 
 
 class DiscoveryClient:
     """
-    🔍 Discovers A2A agents by reading a registry file of URLs and querying
+    Discovers A2A agents by reading a registry file of URLs and querying
     each one's /.well-known/agent.json endpoint to retrieve an AgentCard.
 
     Attributes:
@@ -28,7 +27,6 @@ class DiscoveryClient:
             registry_file (str, optional): Path to the registry JSON. If None,
                 defaults to 'agent_registry.json' in this utilities folder.
         """
-        # If the caller provided a custom path, use it; otherwise, build the default path
         if registry_file:
             self.registry_file = registry_file
         else:

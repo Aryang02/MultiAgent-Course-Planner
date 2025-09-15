@@ -1,3 +1,4 @@
+# 🔁 Import the shared in-memory task manager from the server
 from server.task_manager import InMemoryTaskManager
 
 from agents.tutor_agent.agent import TutorAgent
@@ -19,7 +20,7 @@ class AgentTaskManager(InMemoryTaskManager):
     - It uses the Gemini agent to generate a response
     """
 
-    def __init__(self, agent: ):
+    def __init__(self, agent: TutorAgent):
         super().__init__()     # Call parent class constructor
         self.agent = agent     # Store the Gemini-based agent as a property
 
