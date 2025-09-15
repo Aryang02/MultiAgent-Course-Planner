@@ -20,7 +20,7 @@ notes_agent_card = AgentCard(
         "An agent that helps users manage and summarize their notes effectively. "
         "It can generate notes based on provided topics and ensure they are well-organized."
     ),
-    url=f"{APP_URL}:10001",
+    url=f"{APP_URL}:10005",
     capabilities=AgentCapabilities(skills=skills)
 )
 
