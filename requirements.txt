@@ -17,3 +17,6 @@ langchain
 streamlit
 langchain-pinecone
 pinecone
+a2a-sdk
+google-adk
+mcp[cli]

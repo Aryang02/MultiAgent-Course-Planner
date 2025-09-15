@@ -4,7 +4,7 @@ from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
 from src.utils.agent_utils.agent_discovery import DiscoveryClient
 
 class BaseAgent:
-    def __init__(self, instruction: str, description: str, tools: list[MCPToolset] = [], name: str = "base", cards_path: str):
+    def __init__(self, instruction: str, description: str, tools: list[MCPToolset] = [], name: str = "base", cards_path: str = "agent_registry.json"):
         self.instruction = instruction
         self.description = description
         self.agent = self._build_agent()
