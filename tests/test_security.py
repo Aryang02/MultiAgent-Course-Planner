@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
@@ -47,7 +47,7 @@ def test_refresh_tokens_rotate_pair():
             "sub": str(user.id),
             "jti": str(uuid4()),
             "type": "refresh",
-            "exp": datetime.now(timezone.utc) + timedelta(days=1),
+            "exp": datetime.now(UTC) + timedelta(days=1),
         },
         settings.SECRET_KEY,
         algorithm="HS256",
@@ -65,7 +65,10 @@ def test_refresh_tokens_rotate_pair():
         repo = repo_cls.return_value
         repo.get_active_by_refresh_token.return_value = record
         repo.get_user.return_value = user
-        with patch("src.auth.token_service.issue_tokens", return_value=("new-access", "new-refresh")):
+        with patch(
+            "src.auth.token_service.issue_tokens",
+            return_value=("new-access", "new-refresh"),
+        ):
             access2, refresh2 = refresh_tokens(db, refresh)
 
     assert access2 == "new-access"

@@ -1,9 +1,17 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy.orm import Session
 
-from src.core.models import AgentMessage, AgentRun, AuthToken, ChatHistory, Document, StudyPlan, User
+from src.core.models import (
+    AgentMessage,
+    AgentRun,
+    AuthToken,
+    ChatHistory,
+    Document,
+    StudyPlan,
+    User,
+)
 
 
 class DocumentRepository:
@@ -73,7 +81,7 @@ class AuthTokenRepository:
         return record
 
     def get_active_by_refresh_token(self, refresh_token: str) -> AuthToken | None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         return (
             self.db.query(AuthToken)
             .filter(

@@ -15,7 +15,7 @@ format:
 	ruff check --fix src tests
 
 test:
-	pytest
+	python3 -m pytest
 
 migrate:
 	alembic upgrade head

@@ -1,6 +1,6 @@
 import logging
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
@@ -17,7 +17,7 @@ REFRESH_TOKEN_TTL = timedelta(days=7)
 
 
 def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _encode(payload: dict) -> str:
@@ -106,7 +106,7 @@ def revoke_session(
             jti = payload.get("jti")
             exp = payload.get("exp")
             if jti and exp:
-                expires_at = datetime.fromtimestamp(exp, tz=timezone.utc)
+                expires_at = datetime.fromtimestamp(exp, tz=UTC)
                 block_token(jti, expires_at)
         except JWTError:
             logger.warning("Could not decode access token during logout")

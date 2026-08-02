@@ -1,6 +1,4 @@
-import os
 import uuid
-from typing import List
 
 from fastapi import APIRouter, Depends, File, UploadFile
 from sqlalchemy.orm import Session
@@ -8,7 +6,7 @@ from sqlalchemy.orm import Session
 from src.api.exceptions import AppError
 from src.auth.auth import get_user
 from src.core.models import Document, User
-from src.database.data_ingestion import ALLOWED_EXTENSIONS, DataIngestion
+from src.database.data_ingestion import DataIngestion
 from src.database.db import get_db
 from src.serializers.backend import UploadResponse
 from src.settings import settings
@@ -20,7 +18,7 @@ router = APIRouter(prefix="/v1", tags=["upload"])
 
 @router.post("/upload", response_model=UploadResponse, status_code=202)
 def upload(
-    documents: List[UploadFile] = File(...),
+    documents: list[UploadFile] = File(...),
     index_name: str | None = None,
     user: User = Depends(get_user),
     db: Session = Depends(get_db),

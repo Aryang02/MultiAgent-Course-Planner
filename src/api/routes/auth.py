@@ -4,9 +4,8 @@ from fastapi import APIRouter, Depends, Header, Request
 from jose import jwt
 from sqlalchemy.orm import Session
 
-from src.api.limiter import limiter
-
 from src.api.exceptions import ConflictError, UnauthorizedError
+from src.api.limiter import limiter
 from src.auth.auth import get_user
 from src.auth.token_service import issue_tokens, refresh_tokens, revoke_session
 from src.core.models import User
@@ -21,7 +20,7 @@ from src.serializers.backend import (
     UserResponse,
 )
 from src.settings import settings
-from src.utils.email_helper import build_welcome_email, email_helper
+from src.utils.email_helper import build_welcome_email
 from src.worker.tasks.notifications import send_welcome_email
 
 router = APIRouter(prefix="/v1", tags=["auth"])

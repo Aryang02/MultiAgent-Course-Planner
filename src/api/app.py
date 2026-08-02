@@ -1,13 +1,13 @@
 import logging
 
-from alembic import command
-from alembic.config import Config
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
+from alembic import command
+from alembic.config import Config
 from src.api.deps import get_cors_origins
 from src.api.limiter import limiter
 from src.api.middleware import (

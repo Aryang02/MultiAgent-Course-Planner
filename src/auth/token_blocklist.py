@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import redis
 
@@ -20,9 +20,9 @@ def _get_redis() -> redis.Redis:
 
 def block_token(jti: str, expires_at: datetime) -> None:
     """Add a JWT ID to the Redis blocklist until the token would have expired."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     if expires_at.tzinfo is None:
-        expires_at = expires_at.replace(tzinfo=timezone.utc)
+        expires_at = expires_at.replace(tzinfo=UTC)
     ttl_seconds = max(int((expires_at - now).total_seconds()), 1)
     key = f"{_BLOCKLIST_PREFIX}{jti}"
     try:
