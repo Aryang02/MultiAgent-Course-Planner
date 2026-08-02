@@ -1,6 +1,6 @@
 from ..base_agent import BaseAgent
+from src.agents.utils import parse_json_response
 from src.utils.prompts import TUTOR_DESCRIPTION, TUTOR_SYSTEM_PROMPT
-from src.utils.mcp_utils.mcp_connect import McpConnector
 
 
 class TutorAgent(BaseAgent):
@@ -10,12 +10,18 @@ class TutorAgent(BaseAgent):
             description=TUTOR_DESCRIPTION,
             name="tutor",
         )
-        self.mcp_client = McpConnector("tutor_server")
-        self.tools = self.mcp_client.get_tools()
 
-    async def explain(self, question: str):
-        if not self.tools:
-            self.tools = await self.mcp_client.refresh_tools()
-
-        prompt = f"Explain the following concept in simple terms for a student: {question}"
-        return self.handle_message(prompt)
+    def explain(self, topic: str) -> list[str]:
+        prompt = (
+            f'Break down the topic "{topic}" into 3-7 study subtopics for a student.\n'
+            'Return ONLY a JSON array of strings, e.g. ["Vectors", "Matrices", "Eigenvalues"]'
+        )
+        text = self.generate(prompt)
+        try:
+            parsed = parse_json_response(text)
+            if isinstance(parsed, list):
+                return [str(item) for item in parsed]
+        except (ValueError, TypeError):
+            pass
+        lines = [line.strip().lstrip("-• ") for line in text.splitlines() if line.strip()]
+        return lines[:7] if lines else [topic]

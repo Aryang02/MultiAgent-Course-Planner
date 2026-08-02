@@ -1,29 +1,35 @@
+from src.settings import settings
 from src.utils.mcp_utils.mcp_discovery import MCPDiscovery
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
-from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
+
+MCP_URL_MAP = {
+    "orchestrator_server": settings.MCP_ORCHESTRATOR_URL,
+    "planner_server": settings.MCP_PLANNER_URL,
+    "tutor_server": settings.MCP_TUTOR_URL,
+    "critic_server": settings.MCP_CRITIC_URL,
+    "notes_server": settings.MCP_NOTES_URL,
+}
 
 
 class McpConnector:
     def __init__(self, server_name: str | None = None, config_file: str | None = None):
         self.discovery = MCPDiscovery(config_file=config_file)
         self.server_name = server_name
-        self.tools: list[MCPToolset] = []
+        self._connected = False
 
-    async def connect(self) -> list[MCPToolset]:
-        tools: list[MCPToolset] = []
-        for name, server_info in self.discovery.list_servers().items():
-            if self.server_name and self.server_name != name:
-                continue
-            conn = StreamableHTTPServerParams(url=server_info["args"][0])
-            toolset = MCPToolset(connection_params=conn)
-            await toolset.get_tools()
-            tools.append(toolset)
-        self.tools = tools
-        return tools
+    def get_server_url(self, server_name: str | None = None) -> str:
+        name = server_name or self.server_name
+        if not name:
+            raise ValueError("server_name is required")
+        if name in MCP_URL_MAP:
+            return MCP_URL_MAP[name]
+        servers = self.discovery.list_servers()
+        if name not in servers:
+            raise ValueError(f"Unknown MCP server: {name}")
+        return servers[name]["args"][0]
 
-    def get_tools(self) -> list[MCPToolset]:
-        return self.tools.copy()
+    async def connect(self) -> str:
+        self._connected = True
+        return self.get_server_url()
 
-    async def refresh_tools(self) -> list[MCPToolset]:
-        self.tools = []
-        return await self.connect()
+    def is_connected(self) -> bool:
+        return self._connected

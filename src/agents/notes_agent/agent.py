@@ -1,7 +1,5 @@
-import uuid
-
 from ..base_agent import BaseAgent
-from src.utils.mcp_utils.mcp_connect import McpConnector
+from src.agents.utils import parse_json_response
 from src.utils.prompts import NOTES_DESCRIPTION, NOTES_SYSTEM_PROMPT
 
 
@@ -12,12 +10,23 @@ class NotesAgent(BaseAgent):
             description=NOTES_DESCRIPTION,
             name="notes",
         )
-        self.mcp_client = McpConnector("notes_server")
-        self.tools = self.mcp_client.get_tools()
 
-    async def summarize_notes(self, user_id: uuid.UUID, conversation_id: uuid.UUID, notes: str):
-        if not self.tools:
-            self.tools = await self.mcp_client.refresh_tools()
+    def create_notes(self, topics: list[str]) -> dict:
+        topics_str = ", ".join(topics)
+        prompt = (
+            f"Create comprehensive structured study notes for these topics: {topics_str}\n"
+            'Return JSON with keys: "summary" (string) and "sections" '
+            '(array of objects with "title" and "content").'
+        )
+        text = self.generate(prompt)
+        try:
+            parsed = parse_json_response(text)
+            if isinstance(parsed, dict):
+                return parsed
+        except (ValueError, TypeError):
+            pass
+        return {"summary": text, "sections": []}
 
-        prompt = f"Summarize the following notes: {notes}"
-        return self.handle_message(prompt)
+    def summarize_notes(self, notes: str) -> str:
+        prompt = f"Summarize the following notes concisely:\n{notes}"
+        return self.generate(prompt)

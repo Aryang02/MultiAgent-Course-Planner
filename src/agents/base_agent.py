@@ -1,6 +1,7 @@
-from google.adk.agents.llm_agent import LlmAgent
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
-from src.utils.agent_utils.agent_discovery import DiscoveryClient
+import uuid
+from typing import Any
+
+from src.agents.llm_client import generate
 
 
 class BaseAgent:
@@ -8,24 +9,14 @@ class BaseAgent:
         self,
         instruction: str,
         description: str,
-        tools: list[MCPToolset] | None = None,
         name: str = "base",
-        cards_path: str | None = None,
     ):
         self.instruction = instruction
         self.description = description
-        self.tools = tools or []
         self.name = name
-        self.agent = self._build_agent()
-        self.agent_cards = []
 
-    def _build_agent(self):
-        return LlmAgent(
-            model="gemini-1.5-pro",
-            instruction=self.instruction,
-            description=self.description,
-        )
+    def generate(self, user_prompt: str) -> str:
+        return generate(system_instruction=self.instruction, user_prompt=user_prompt)
 
     def handle_message(self, message: str) -> str:
-        result = self.agent.run(message)
-        return result.get("output") if isinstance(result, dict) else str(result)
+        return self.generate(message)

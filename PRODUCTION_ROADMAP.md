@@ -286,76 +286,45 @@ Proposed `docker-compose.yml` services:
 
 ### 4.1 — MCP server fixes
 
-- [ ] **Fix port conflict:** `critic_server` → port 8004 (match `mcp_config.json`)
-- [ ] **Implement `notes_server.py`** on port 8005
-- [ ] Fix `orchestrator_server` name (`"tutor-server"` → `"orchestrator-server"`)
-- [ ] Extract MCP startup from `api.py`; run each server as its own process/container
-- [ ] Add MCP health endpoint or startup probe per server
-- [ ] Fix all MCP tools to use `get_db_session()` context manager
-
-### 4.2 — MCP tool inventory (target state)
-
-| Server | Port | Tools |
-|--------|------|-------|
-| orchestrator | 8001 | `get_user_history`, `get_study_plans`, `route_query` |
-| planner | 8002 | `save_plan`, `get_plan`, `get_agent_conversation` |
-| tutor | 8003 | `get_agent_conversation`, `search_documents` (RAG) |
-| critic | 8004 | `get_agent_conversation`, `save_test` |
-| notes | 8005 | `get_agent_conversation`, `save_notes` |
+- [x] **Fix port conflict:** `critic_server` → port 8004 (done in Phase 0)
+- [x] **Implement `notes_server.py`** on port 8005 (done in Phase 0)
+- [x] Fix `orchestrator_server` name (done in Phase 0)
+- [x] Extract MCP startup from `api.py`; separate containers (done in Phase 0)
+- [ ] Add MCP health endpoint or startup probe per server — Phase 7
+- [x] Fix all MCP tools to use `get_db_session()` context manager (done in Phase 1)
 
 ### 4.3 — Fix `McpConnector`
 
-Current bugs in `src/utils/mcp_utils/mcp_connect.py`:
-
-- [ ] `MCPDiscovery` is called with server name string but expects config file path
-- [ ] `tools.append[toolset]` should be `tools.append(toolset)`
-- [ ] `list[MCPToolset] = []` is invalid syntax
-- [ ] `_load_all_tools` is async but called from `__init__` synchronously
-
-Refactor to:
-
-```python
-class McpConnector:
-    async def connect(self, server_name: str) -> MCPToolset: ...
-    async def get_tool(self, server_name: str, tool_name: str): ...
-```
+- [x] Refactored to resolve server URLs from settings/env
+- [x] Removed broken ADK toolset loading from `__init__`
 
 ### 4.4 — Implement `AgentExecutor`
 
-Fill `src/agents/agent_executor.py`:
-
-- [ ] Maintain registry of agent name → handler
-- [ ] `send_message(sender, target, message)` → routes via A2A HTTP or direct call
-- [ ] Log all inter-agent messages to `agent_messages` table
-- [ ] Create `agent_runs` record per pipeline execution
+- [x] Registry of agent name → handler
+- [x] `send_message()` and `call_agent()` with async support
+- [x] Log inter-agent messages via callback to `agent_messages` table
+- [x] `agent_runs` record created per pipeline execution
 
 ### 4.5 — Complete agent implementations
 
-| Agent | Fixes Needed |
-|-------|-------------|
-| `BaseAgent` | Add `log_message()`, `log_run()` used by PlannerAgent; fix `DiscoveryClient.list_agent_cards` (sync vs async) |
-| `PlannerAgent` | Fix `McpConnector('critic_server')` → should not need critic MCP for planning; wire tutor/notes/critic as A2A calls |
-| `TutorAgent` | Fix `name="critic"` → `name="tutor"`; implement `explain()` using LLM + optional RAG |
-| `NotesAgent` | Implement `create_notes()` (called by Planner but missing) |
-| `CriticAgent` | Fix import `from src.utils.mcp_connect` → `mcp_utils.mcp_connect`; implement `create_test()` |
-| `OrchestratorAgent` | Wire to real `AgentExecutor` |
+| Agent | Status |
+|-------|--------|
+| `BaseAgent` | Done — uses `llm_client.generate()` |
+| `PlannerAgent` | Done — orchestrates via `AgentExecutor` |
+| `TutorAgent` | Done — `explain()` returns subtopics |
+| `NotesAgent` | Done — `create_notes()` returns structured notes |
+| `CriticAgent` | Done — `create_test()` returns Q&A |
+| `OrchestratorAgent` | Done — routes via `AgentExecutor` |
 
 ### 4.6 — Agent pipeline in Celery task
 
-```python
-@celery_app.task(bind=True, max_retries=3)
-def run_agent_pipeline(self, user_id, chat_id, query):
-    planner = PlannerAgent()
-    plan = asyncio.run(planner.create_plan(user_id, chat_id, query, run_id))
-    # persist AgentRun + return plan
-```
+- [x] `run_agent_pipeline` calls full `run_pipeline()` service
+- [x] Saves `StudyPlan`, updates `ChatHistory`, logs `AgentRun`
 
 ### 4.7 — A2A server
 
-- [ ] Implement `src/a2a_server/server.py` as standalone FastAPI app per agent
-- [ ] Each agent runs on its registry port (10002–10005)
-- [ ] Serve `/.well-known/agent.json` from each agent process
-- [ ] Remove boilerplate `task_manager.py` files (TellTimeAgent template)
+- [x] `src/a2a_server/server.py` serves `/.well-known/agent.json`
+- [x] Removed TellTimeAgent boilerplate `task_manager.py` files
 
 **Deliverable:** `POST /v1/generate` with topic "Linear Algebra" returns a complete study plan with topics, notes, and test questions.
 
