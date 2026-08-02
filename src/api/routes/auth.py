@@ -14,7 +14,7 @@ from src.serializers.backend import (
     TokenResponse,
     UserResponse,
 )
-from src.utils.email_helper import email_helper
+from src.worker.tasks.notifications import send_welcome_email
 
 router = APIRouter(prefix="/v1", tags=["auth"])
 
@@ -32,8 +32,8 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)) -> UserRespon
     db.refresh(new_user)
 
     link = new_user.generate_link()
-    email_helper(
-        [body.email],
+    send_welcome_email.delay(
+        body.email,
         (
             "Welcome to MCP! Your account has been successfully created.\n\n"
             f"Please use the following {link} to login."

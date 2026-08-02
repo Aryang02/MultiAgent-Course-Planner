@@ -195,44 +195,34 @@ Proposed `docker-compose.yml` services:
 
 ### 2.2 — Fix and complete endpoints
 
-| Endpoint | Work Required |
-|----------|---------------|
-| `POST /v1/register` | Use Pydantic body; return consistent error codes |
-| `POST /v1/login` | Persist tokens to `auth_tokens`; add `POST /v1/refresh` |
-| `POST /v1/upload` | Save `Document` record in Postgres; support TXT/DOCX loaders |
-| `GET /v1/new_chat` | Fix route prefix (`/v1/new_chat`); fix model fields |
-| `GET /v1/chats` | Implement: return messages for `chat_id` |
-| `GET /v1/chats` (list) | Add `GET /v1/chats` listing all user chats |
-| `POST /v1/generate` | Enqueue Celery task (Phase 3); return `task_id` |
-| `GET /v1/generate/{task_id}` | Poll async result |
-| `GET /v1/study-plans` | List user's study plans |
-| `GET /v1/study-plans/{id}` | Get single plan |
-| `GET /health` | Liveness: DB + Redis ping |
-| `GET /ready` | Readiness: all dependencies up |
+| Endpoint | Status |
+|----------|--------|
+| `POST /v1/register` | Done — Pydantic body, 409 on conflict |
+| `POST /v1/login` | Done — Pydantic body; token persistence deferred to Phase 6 |
+| `POST /v1/upload` | Done — saves `Document` records; TXT/DOCX supported |
+| `POST /v1/chats` | Done — replaces `GET /v1/new_chat` |
+| `GET /v1/chats` | Done — list all user chats |
+| `GET /v1/chats/{chat_id}` | Done — return messages for chat |
+| `POST /v1/generate` | Stub — returns 501 until Phase 3 Celery |
+| `GET /v1/tasks/{task_id}` | Stub — returns 501 until Phase 3 |
+| `GET /v1/study-plans` | Done |
+| `GET /v1/study-plans/{id}` | Done |
+| `GET /v1/me` | Done — current user profile |
+| `GET /health` | Done |
+| `GET /ready` | Done — DB + Redis check |
 
 ### 2.3 — Middleware and error handling
 
-- [ ] Add **CORS** middleware (configurable origins via env)
-- [ ] Add global exception handler returning consistent JSON errors
-- [ ] Add request ID middleware (`X-Request-ID` header)
-- [ ] Add structured logging (JSON format) with `request_id`, `user_id`, `path`
-- [ ] Rate limiting via `slowapi` or Redis-backed limiter on `/v1/login` and `/v1/generate`
+- [x] Add **CORS** middleware (configurable origins via env)
+- [x] Add global exception handler returning consistent JSON errors
+- [x] Add request ID middleware (`X-Request-ID` header)
+- [ ] Add structured logging (JSON format) with `request_id`, `user_id`, `path` — Phase 7
+- [x] Rate limiting via `slowapi` on `/v1/login` and `/v1/generate`
 
 ### 2.4 — API router modularization
 
-Split `src/core/api.py` into:
-
-```
-src/api/
-├── __init__.py      # app factory
-├── deps.py          # shared dependencies
-├── routes/
-│   ├── auth.py
-│   ├── upload.py
-│   ├── chat.py
-│   ├── generate.py
-│   └── health.py
-```
+- [x] Split into `src/api/routes/` — `auth`, `upload`, `chat`, `generate`, `health`, `study_plans`
+- [x] `src/core/api.py` kept as backward-compatible entrypoint
 
 **Deliverable:** OpenAPI docs at `/docs` are complete and accurate; all endpoints functional.
 
@@ -244,9 +234,9 @@ src/api/
 
 ### 3.1 — Redis setup
 
-- [ ] Add `redis:7-alpine` to docker-compose
-- [ ] Add settings: `REDIS_URL=redis://redis:6379/0`
-- [ ] Use Redis for:
+- [x] Add `redis:7-alpine` to docker-compose
+- [x] Add settings: `REDIS_URL=redis://redis:6379/0`
+- [x] Use Redis for:
   - **Celery broker** (db 0)
   - **Celery result backend** (db 1)
   - **JWT refresh token blocklist** (db 2, optional)
@@ -255,57 +245,36 @@ src/api/
 
 ### 3.2 — Celery application
 
-- [ ] Add `celery[redis]>=5.6` to dependencies
-- [ ] Create `src/worker/celery_app.py`:
-
-```python
-celery_app = Celery("course_planner")
-celery_app.config_from_object("src.worker.config")
-```
-
-- [ ] Configure:
-  - `task_serializer = "json"`
-  - `result_serializer = "json"`
-  - `task_acks_late = True`
-  - `task_reject_on_worker_lost = True`
-  - `worker_prefetch_multiplier = 1` (for long LLM tasks)
-  - Retry policy: `autoretry_for`, `max_retries=3`, exponential backoff
+- [x] Add `celery[redis]>=5.6` to dependencies
+- [x] Create `src/worker/celery_app.py` with `config_from_object("src.worker.config")`
+- [x] Configure serializers, acks_late, reject_on_worker_lost, prefetch, retry policy
 
 ### 3.3 — Task definitions
 
-| Task | Queue | Purpose |
-|------|-------|---------|
-| `ingest_documents` | `ingestion` | Chunk, embed, upsert to Pinecone |
-| `run_agent_pipeline` | `agents` | Execute planner/tutor/notes/critic chain |
-| `send_welcome_email` | `notifications` | Async SMTP |
-| `cleanup_temp_files` | `maintenance` | Periodic temp file cleanup |
+| Task | Queue | Status |
+|------|-------|--------|
+| `ingest_documents` | `ingestion` | Done |
+| `run_agent_pipeline` | `agents` | Done (stub pipeline → Phase 4) |
+| `send_welcome_email` | `notifications` | Done |
+| `cleanup_temp_files` | `maintenance` | Done |
 
 ### 3.4 — Wire API to Celery
 
-- [ ] `POST /v1/upload` → enqueue `ingest_documents`, return `task_id`
-- [ ] `POST /v1/generate` → enqueue `run_agent_pipeline`, return `task_id`
-- [ ] `GET /v1/tasks/{task_id}` → poll Celery result
-- [ ] `POST /v1/register` → enqueue `send_welcome_email`
+- [x] `POST /v1/upload` → enqueue `ingest_documents`, return `task_id`
+- [x] `POST /v1/generate` → enqueue `run_agent_pipeline`, return `task_id`
+- [x] `GET /v1/tasks/{task_id}` → poll Celery result
+- [x] `POST /v1/register` → enqueue `send_welcome_email`
 
 ### 3.5 — Celery Beat (scheduled tasks)
 
-- [ ] Expire old refresh tokens (daily)
-- [ ] Clean orphaned temp files in `data/` (hourly)
-- [ ] Health ping of MCP servers (every 5 min)
+- [x] Clean orphaned temp files in `data/` (hourly)
+- [ ] Expire old refresh tokens (daily) — Phase 6
+- [ ] Health ping of MCP servers (every 5 min) — Phase 7
 
 ### 3.6 — Worker Docker service
 
-```yaml
-worker:
-  build: .
-  command: celery -A src.worker.celery_app worker -Q ingestion,agents,notifications -c 4
-  depends_on: [db, redis]
-
-beat:
-  build: .
-  command: celery -A src.worker.celery_app beat
-  depends_on: [redis]
-```
+- [x] `worker` service with queues: ingestion, agents, notifications, maintenance
+- [x] `beat` service for scheduled tasks
 
 **Deliverable:** Document upload and agent generation run asynchronously; API returns immediately with task ID.
 

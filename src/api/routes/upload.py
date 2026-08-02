@@ -11,13 +11,14 @@ from src.core.models import Document, User
 from src.database.data_ingestion import DataIngestion
 from src.database.db import get_db
 from src.serializers.backend import UploadResponse
+from src.worker.tasks.ingestion import ingest_documents
 
 router = APIRouter(prefix="/v1", tags=["upload"])
 
 ALLOWED_EXTENSIONS = {".pdf", ".txt", ".docx"}
 
 
-@router.post("/upload", response_model=UploadResponse)
+@router.post("/upload", response_model=UploadResponse, status_code=202)
 def upload(
     documents: List[UploadFile] = File(...),
     index_name: str = "vector_db_index",
@@ -47,11 +48,17 @@ def upload(
         document_ids.append(record.id)
     db.commit()
 
-    num_chunks = data_ingestion.ingest_saved_files(user.id, [path for path, _ in file_records])
+    task = ingest_documents.delay(
+        user_id=str(user.id),
+        file_paths=[path for path, _ in file_records],
+        document_ids=[str(doc_id) for doc_id in document_ids],
+        index_name=index_name,
+    )
 
     return UploadResponse(
-        detail="Documents ingested successfully",
-        chunks_processed=num_chunks,
+        task_id=task.id,
+        detail="Document ingestion started",
         files_uploaded=len(documents),
         document_ids=document_ids,
+        status="pending",
     )

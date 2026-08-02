@@ -21,7 +21,7 @@ make install-dev   # Install package + dev tools
 make smoke         # Verify imports
 make lint          # Ruff + mypy
 make test          # Run pytest
-make up            # Docker compose up
+make up            # Docker compose up (api, worker, beat, redis, db, mcp)
 make down          # Docker compose down
 ```
 

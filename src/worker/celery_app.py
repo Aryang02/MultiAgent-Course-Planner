@@ -1,18 +1,19 @@
-"""Celery application. Full implementation in Phase 3."""
+from celery import Celery
 
-try:
-    from celery import Celery
-    from src.settings import settings
+from src.settings import settings
 
-    celery_app = Celery("course_planner")
-    celery_app.conf.update(
-        broker_url=settings.CELERY_BROKER_URL,
-        result_backend=settings.CELERY_RESULT_BACKEND,
-        task_serializer="json",
-        result_serializer="json",
-        accept_content=["json"],
-        task_acks_late=True,
-        worker_prefetch_multiplier=1,
-    )
-except ImportError:
-    celery_app = None
+celery_app = Celery("course_planner")
+celery_app.config_from_object("src.worker.config")
+
+# Ensure broker is set even if config object import fails partially
+celery_app.conf.broker_url = settings.CELERY_BROKER_URL
+celery_app.conf.result_backend = settings.CELERY_RESULT_BACKEND
+
+celery_app.autodiscover_tasks(
+    [
+        "src.worker.tasks.ingestion",
+        "src.worker.tasks.agents",
+        "src.worker.tasks.notifications",
+        "src.worker.tasks.maintenance",
+    ]
+)

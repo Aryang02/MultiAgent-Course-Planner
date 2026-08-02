@@ -37,10 +37,11 @@ class TokenResponse(BaseModel):
 
 
 class UploadResponse(BaseModel):
+    task_id: str
     detail: str
-    chunks_processed: int
     files_uploaded: int
     document_ids: list[UUID]
+    status: str = "pending"
 
 
 class GenerateRequest(BaseModel):
