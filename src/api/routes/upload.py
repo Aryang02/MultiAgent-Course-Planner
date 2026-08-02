@@ -12,6 +12,7 @@ from src.database.data_ingestion import ALLOWED_EXTENSIONS, DataIngestion
 from src.database.db import get_db
 from src.serializers.backend import UploadResponse
 from src.settings import settings
+from src.worker.task_ownership import register_task_owner
 from src.worker.tasks.ingestion import ingest_documents
 
 router = APIRouter(prefix="/v1", tags=["upload"])
@@ -61,6 +62,7 @@ def upload(
         file_items=file_items,
         index_name=index_name,
     )
+    register_task_owner(task.id, str(user.id))
 
     return UploadResponse(
         task_id=task.id,

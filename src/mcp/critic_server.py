@@ -1,8 +1,8 @@
 import os
-import uuid
 
 from mcp.server.fastmcp import FastMCP
 
+from src.auth.authorization import validate_run_belongs_to_user
 from src.database.session import get_db_session
 from src.repositories import AgentRunRepository
 
@@ -15,8 +15,9 @@ critic = FastMCP("critic-server", host=MCP_HOST, port=MCP_PORT, stateless_http=T
 @critic.tool("get_agent_conversation")
 async def get_agent_conversation(user_id: str, run_id: str):
     with get_db_session() as db:
+        run_uuid = validate_run_belongs_to_user(db, user_id, run_id)
         runs = AgentRunRepository(db)
-        messages = runs.get_messages(uuid.UUID(run_id))
+        messages = runs.get_messages(run_uuid)
         return [
             {
                 "sender_agent": msg.sender_agent,

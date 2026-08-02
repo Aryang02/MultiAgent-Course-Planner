@@ -3,6 +3,7 @@ import uuid
 
 from mcp.server.fastmcp import FastMCP
 
+from src.auth.authorization import validate_run_belongs_to_user, validate_user_exists
 from src.database.session import get_db_session
 from src.repositories import AgentRunRepository, StudyPlanRepository
 
@@ -21,9 +22,10 @@ async def save_plan(
     study_topics: list,
 ):
     with get_db_session() as db:
+        user_uuid = validate_user_exists(db, user_id)
         plans = StudyPlanRepository(db)
         saved = plans.save(
-            user_id=uuid.UUID(user_id),
+            user_id=user_uuid,
             topic=topic,
             study_topics=study_topics,
             notes=plan,
@@ -35,8 +37,9 @@ async def save_plan(
 @planner.tool("get_agent_conversation")
 async def get_agent_conversation(user_id: str, run_id: str):
     with get_db_session() as db:
+        run_uuid = validate_run_belongs_to_user(db, user_id, run_id)
         runs = AgentRunRepository(db)
-        messages = runs.get_messages(uuid.UUID(run_id))
+        messages = runs.get_messages(run_uuid)
         return [
             {
                 "sender_agent": msg.sender_agent,

@@ -19,6 +19,14 @@ def test_health_endpoint():
     assert response.json() == {"status": "ok"}
 
 
+def test_security_headers_present():
+    client = TestClient(_make_app())
+    response = client.get("/health")
+    assert response.headers.get("X-Content-Type-Options") == "nosniff"
+    assert response.headers.get("X-Frame-Options") == "DENY"
+    assert "Content-Security-Policy" in response.headers
+
+
 def test_register_validation_error():
     client = TestClient(_make_app())
     response = client.post(
@@ -97,3 +105,5 @@ def test_task_status_endpoint():
 
     assert response.status_code == 200
     assert response.json()["status"] == "completed"
+    mock_status.assert_called_once()
+    assert mock_status.call_args.args[0] == "task-abc-123"

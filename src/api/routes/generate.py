@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, Request
 
-from src.api.exceptions import NotFoundError
 from src.api.limiter import limiter
 from src.auth.auth import get_user
 from src.core.models import User
 from src.serializers.backend import GenerateRequest, GenerateResponse, TaskStatusResponse
+from src.worker.task_ownership import register_task_owner
 from src.worker.task_status import get_task_status
 from src.worker.tasks.agents import run_agent_pipeline
 
@@ -23,6 +23,7 @@ def generate(
         chat_id=str(body.chat_id),
         query=body.query,
     )
+    register_task_owner(task.id, str(user.id))
     return GenerateResponse(
         task_id=task.id,
         status="pending",
@@ -32,9 +33,5 @@ def generate(
 
 @router.get("/tasks/{task_id}", response_model=TaskStatusResponse)
 def poll_task_status(task_id: str, user: User = Depends(get_user)) -> TaskStatusResponse:
-    status = get_task_status(task_id)
-    if status.status == "pending" and status.result is None and status.error is None:
-        return status
-    if status.status == "failed" and status.error and "not found" in status.error.lower():
-        raise NotFoundError("Task not found")
+    status = get_task_status(task_id, str(user.id))
     return status

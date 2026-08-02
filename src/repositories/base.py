@@ -1,9 +1,9 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
-from src.core.models import AgentMessage, AgentRun, ChatHistory, Document, StudyPlan, User
+from src.core.models import AgentMessage, AgentRun, AuthToken, ChatHistory, Document, StudyPlan, User
 
 
 class DocumentRepository:
@@ -46,6 +46,50 @@ class DocumentRepository:
     def mark_processing(self, document_ids: list[uuid.UUID]) -> None:
         for doc_id in document_ids:
             self.update_status(doc_id, "processing")
+
+
+class AuthTokenRepository:
+    def __init__(self, db: Session):
+        self.db = db
+
+    def create(
+        self,
+        user_id: uuid.UUID,
+        access_token: str,
+        refresh_token: str,
+        expires_at: datetime,
+        refresh_expires_at: datetime,
+    ) -> AuthToken:
+        record = AuthToken(
+            user_id=user_id,
+            token=access_token,
+            refresh_token=refresh_token,
+            expires_at=expires_at,
+            refresh_expires_at=refresh_expires_at,
+            refresh_expired=False,
+        )
+        self.db.add(record)
+        self.db.flush()
+        return record
+
+    def get_active_by_refresh_token(self, refresh_token: str) -> AuthToken | None:
+        now = datetime.now(timezone.utc)
+        return (
+            self.db.query(AuthToken)
+            .filter(
+                AuthToken.refresh_token == refresh_token,
+                AuthToken.refresh_expired.is_(False),
+                AuthToken.refresh_expires_at > now,
+            )
+            .first()
+        )
+
+    def mark_refresh_expired(self, record: AuthToken) -> None:
+        record.refresh_expired = True
+        self.db.flush()
+
+    def get_user(self, user_id: uuid.UUID) -> User | None:
+        return self.db.query(User).filter(User.id == user_id).first()
 
 
 class UserRepository:
@@ -189,4 +233,11 @@ class AgentRunRepository:
             .filter(AgentMessage.run_id == run_id)
             .order_by(AgentMessage.timestamp)
             .all()
+        )
+
+    def get_run_for_user(self, user_id: uuid.UUID, run_id: uuid.UUID) -> AgentRun | None:
+        return (
+            self.db.query(AgentRun)
+            .filter(AgentRun.run_id == run_id, AgentRun.user_id == user_id)
+            .first()
         )

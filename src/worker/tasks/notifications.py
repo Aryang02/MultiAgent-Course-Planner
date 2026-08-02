@@ -7,7 +7,12 @@ logger = logging.getLogger(__name__)
 
 
 @celery_app.task(name="src.worker.tasks.notifications.send_welcome_email")
-def send_welcome_email(to_email: str, message: str, subject: str) -> dict:
+def send_welcome_email(
+    to_email: str,
+    message: str,
+    subject: str,
+    html: str | None = None,
+) -> dict:
     logger.info("Sending welcome email to %s", to_email)
-    email_helper([to_email], message, subject)
+    email_helper([to_email], message, subject, html=html)
     return {"sent": True, "to": to_email}

@@ -9,7 +9,7 @@ from slowapi.errors import RateLimitExceeded
 
 from src.api.deps import get_cors_origins
 from src.api.limiter import limiter
-from src.api.middleware import RequestIdMiddleware, register_exception_handlers
+from src.api.middleware import RequestIdMiddleware, SecurityHeadersMiddleware, register_exception_handlers
 from src.api.routes import auth, chat, documents, generate, health, study_plans, upload
 from src.settings import settings
 
@@ -38,6 +38,7 @@ def create_app(*, run_migrations_on_startup: bool = True) -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(RequestIdMiddleware)
     register_exception_handlers(app)
 

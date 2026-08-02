@@ -20,6 +20,11 @@ class UnauthorizedError(AppError):
         super().__init__(message, status_code=401)
 
 
+class ForbiddenError(AppError):
+    def __init__(self, message: str = "Forbidden"):
+        super().__init__(message, status_code=403)
+
+
 class NotImplementedFeatureError(AppError):
     def __init__(self, message: str = "Feature not yet implemented"):
         super().__init__(message, status_code=501)

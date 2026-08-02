@@ -1,48 +1,39 @@
+import logging
+import uuid
+
+from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-import uuid
-from fastapi import Depends, HTTPException
-from src.settings import settings
-from datetime import datetime, timedelta
+from sqlalchemy.orm import Session
+
+from src.auth.token_blocklist import is_token_blocked
 from src.core.models import User as UserModel
 from src.database.db import get_db
-from sqlalchemy.orm import Session
-import traceback
+from src.settings import settings
+
+logger = logging.getLogger(__name__)
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
-
-def create_token(data: dict, expires_delta: timedelta = None):
-    try:
-        to_encode = data.copy()
-        if expires_delta:
-            expire = datetime.utcnow() + expires_delta
-        else:
-            expire = datetime.utcnow() + timedelta(minutes=15)
-        to_encode.update({"exp": expire, "uuid": str(uuid.uuid4())})
-        encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm="HS256")
-        expire_refresh = datetime.utcnow() + timedelta(days=1)
-        refresh_token = jwt.encode(
-            {"uuid": str(uuid.uuid4()), "type": "refresh", "exp": expire_refresh},
-            settings.SECRET_KEY,
-            algorithm="HS256",
-        )
-        return (encoded_jwt, refresh_token)
-    except Exception as e:
-        traceback.print_exc()
-        raise Exception(f"Failed to create token: {str(e)}")
 
 
 def get_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> UserModel:
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        if payload.get("type") != "access":
+            raise HTTPException(status_code=401, detail="Invalid token type")
+
+        jti = payload.get("jti")
+        if jti and is_token_blocked(jti):
+            raise HTTPException(status_code=401, detail="Token has been revoked")
+
         user_id: str = payload.get("sub")
         if not user_id:
             raise HTTPException(status_code=401, detail="Invalid token")
-        user = db.query(UserModel).filter(UserModel.id == user_id).first()
+
+        user = db.query(UserModel).filter(UserModel.id == uuid.UUID(user_id)).first()
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
         return user
-    except JWTError:
-        traceback.print_exc()
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    except (JWTError, ValueError):
+        logger.debug("Token validation failed")
+        raise HTTPException(status_code=401, detail="Invalid or expired token") from None

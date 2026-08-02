@@ -63,4 +63,5 @@ def ingest_documents(
                 )
 
     result["task_id"] = self.request.id
+    result["user_id"] = user_id
     return result

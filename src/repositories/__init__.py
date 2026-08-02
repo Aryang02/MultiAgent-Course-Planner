@@ -2,6 +2,7 @@
 
 from src.repositories.base import (
     AgentRunRepository,
+    AuthTokenRepository,
     ChatRepository,
     DocumentRepository,
     StudyPlanRepository,
@@ -10,6 +11,7 @@ from src.repositories.base import (
 
 __all__ = [
     "UserRepository",
+    "AuthTokenRepository",
     "ChatRepository",
     "StudyPlanRepository",
     "AgentRunRepository",

@@ -10,6 +10,14 @@ class ErrorResponse(BaseModel):
     request_id: str | None = None
 
 
+class LogoutRequest(BaseModel):
+    refresh_token: str
+
+
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+
 class RegisterRequest(BaseModel):
     username: str = Field(min_length=3, max_length=50)
     email: EmailStr

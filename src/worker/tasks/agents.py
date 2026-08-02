@@ -28,4 +28,5 @@ def run_agent_pipeline(
         query=query,
         run_id=run_uuid,
     )
+    result["user_id"] = user_id
     return result
