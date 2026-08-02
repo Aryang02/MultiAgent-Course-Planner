@@ -3,7 +3,49 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session
 
-from src.core.models import AgentMessage, AgentRun, ChatHistory, StudyPlan, User
+from src.core.models import AgentMessage, AgentRun, ChatHistory, Document, StudyPlan, User
+
+
+class DocumentRepository:
+    def __init__(self, db: Session):
+        self.db = db
+
+    def get_by_id(self, user_id: uuid.UUID, document_id: uuid.UUID) -> Document | None:
+        return (
+            self.db.query(Document)
+            .filter(Document.user_id == user_id, Document.id == document_id)
+            .first()
+        )
+
+    def list_for_user(self, user_id: uuid.UUID) -> list[Document]:
+        return (
+            self.db.query(Document)
+            .filter(Document.user_id == user_id)
+            .order_by(Document.uploaded_at.desc())
+            .all()
+        )
+
+    def update_status(
+        self,
+        document_id: uuid.UUID,
+        status: str,
+        chunk_count: int | None = None,
+        error_message: str | None = None,
+    ) -> Document | None:
+        doc = self.db.query(Document).filter(Document.id == document_id).first()
+        if not doc:
+            return None
+        doc.status = status
+        if chunk_count is not None:
+            doc.chunk_count = chunk_count
+        if error_message is not None:
+            doc.error_message = error_message[:1024]
+        self.db.flush()
+        return doc
+
+    def mark_processing(self, document_ids: list[uuid.UUID]) -> None:
+        for doc_id in document_ids:
+            self.update_status(doc_id, "processing")
 
 
 class UserRepository:

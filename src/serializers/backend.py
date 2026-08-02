@@ -44,6 +44,22 @@ class UploadResponse(BaseModel):
     status: str = "pending"
 
 
+class DocumentResponse(BaseModel):
+    id: UUID
+    file_name: str
+    status: str
+    chunk_count: int | None = None
+    error_message: str | None = None
+    index_name: str
+    uploaded_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class DocumentListResponse(BaseModel):
+    documents: list[DocumentResponse]
+
+
 class GenerateRequest(BaseModel):
     query: str = Field(min_length=1, max_length=4000)
     chat_id: UUID

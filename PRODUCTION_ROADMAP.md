@@ -336,29 +336,27 @@ Proposed `docker-compose.yml` services:
 
 ### 5.1 — Complete file format support
 
-- [ ] Add `TextLoader` for `.txt`
-- [ ] Add `Docx2txtLoader` or `UnstructuredWordDocumentLoader` for `.docx`
-- [ ] Validate file size limits (e.g. 50 MB per file, 200 MB per request)
-- [ ] Virus scan hook (optional, ClamAV sidecar)
+- [x] Add `TextLoader` for `.txt` (done in Phase 2)
+- [x] Add `Docx2txtLoader` for `.docx` (done in Phase 2)
+- [x] Validate file size limits (50 MB per file, 200 MB per request)
+- [ ] Virus scan hook (optional, ClamAV sidecar) — deferred
 
 ### 5.2 — User-scoped vector search
 
-- [ ] Namespace Pinecone vectors by `user_id`
-- [ ] Add metadata filter on all retrievals: `{"user_id": str(user_id)}`
-- [ ] Add `search_documents(user_id, query, top_k)` utility for TutorAgent RAG
+- [x] Namespace Pinecone vectors by `user_id`
+- [x] Add metadata filter on all retrievals: `{"user_id": str(user_id)}`
+- [x] Add `search_documents(user_id, query, top_k)` utility for TutorAgent RAG
 
 ### 5.3 — Ingestion reliability
 
-- [ ] Move ingestion to Celery `ingest_documents` task (Phase 3)
-- [ ] Track ingestion status on `Document` model: `pending | processing | completed | failed`
-- [ ] Store chunk count and error message on document record
-- [ ] Retry failed ingestions with exponential backoff
+- [x] Ingestion via Celery `ingest_documents` task
+- [x] Track ingestion status on `Document` model: `pending | processing | completed | failed`
+- [x] Store chunk count and error message on document record
+- [x] Retry failed ingestions with exponential backoff (Celery autoretry)
 
 ### 5.4 — Object storage (optional, recommended for prod)
 
-- [ ] Replace local `data/{user_id}/` with S3/GCS/MinIO
-- [ ] Store `file_path` as object key, not local path
-- [ ] Pre-signed URLs for download if needed
+- [ ] Replace local `data/{user_id}/` with S3/GCS/MinIO — deferred
 
 **Deliverable:** Upload PDF/TXT/DOCX → async processing → TutorAgent can retrieve relevant chunks for a query.
 

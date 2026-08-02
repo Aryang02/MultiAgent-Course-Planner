@@ -37,6 +37,9 @@ class Settings:
     CORS_ORIGINS: str = os.getenv(
         "CORS_ORIGINS", "http://localhost:3000,http://localhost:8000"
     )
+    MAX_UPLOAD_FILE_SIZE_MB: int = int(os.getenv("MAX_UPLOAD_FILE_SIZE_MB", "50"))
+    MAX_UPLOAD_REQUEST_SIZE_MB: int = int(os.getenv("MAX_UPLOAD_REQUEST_SIZE_MB", "200"))
+    DEFAULT_VECTOR_INDEX: str = os.getenv("DEFAULT_VECTOR_INDEX", "vector_db_index")
 
 
 settings = Settings()

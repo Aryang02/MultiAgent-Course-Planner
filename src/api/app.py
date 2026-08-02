@@ -10,7 +10,7 @@ from slowapi.errors import RateLimitExceeded
 from src.api.deps import get_cors_origins
 from src.api.limiter import limiter
 from src.api.middleware import RequestIdMiddleware, register_exception_handlers
-from src.api.routes import auth, chat, generate, health, study_plans, upload
+from src.api.routes import auth, chat, documents, generate, health, study_plans, upload
 from src.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -51,6 +51,7 @@ def create_app(*, run_migrations_on_startup: bool = True) -> FastAPI:
     app.include_router(health.router)
     app.include_router(auth.router)
     app.include_router(upload.router)
+    app.include_router(documents.router)
     app.include_router(chat.router)
     app.include_router(generate.router)
     app.include_router(study_plans.router)

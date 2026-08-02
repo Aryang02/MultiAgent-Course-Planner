@@ -22,7 +22,7 @@ class PlannerAgent(BaseAgent):
         run_id: uuid.UUID,
     ) -> dict:
         study_topics = await self.executor.call_agent(
-            "planner", "tutor", "explain", topic
+            "planner", "tutor", "explain", topic, user_id=user_id
         )
         notes = await self.executor.call_agent(
             "planner", "notes", "create_notes", study_topics
