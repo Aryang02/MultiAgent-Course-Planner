@@ -8,10 +8,19 @@ from datetime import datetime
 from typing import List
 
 from src.auth.auth import create_token, get_user
-from src.core.models import Base, ChatHistory, User
+from src.core.models import User
+from src.repositories import ChatRepository, UserRepository
 from src.database.data_ingestion import DataIngestion
-from src.database.db import engine, get_db
+from src.database.db import get_db
 from src.utils.email_helper import email_helper
+
+
+def run_migrations() -> None:
+    from alembic import command
+    from alembic.config import Config
+
+    alembic_cfg = Config("alembic.ini")
+    command.upgrade(alembic_cfg, "head")
 
 
 def create_app() -> FastAPI:
@@ -19,14 +28,10 @@ def create_app() -> FastAPI:
 
     @app.on_event("startup")
     def on_startup() -> None:
-        create_tables()
+        run_migrations()
 
     register_routes(app)
     return app
-
-
-def create_tables() -> None:
-    Base.metadata.create_all(bind=engine)
 
 
 def register_routes(app: FastAPI) -> None:
@@ -92,7 +97,8 @@ def register_routes(app: FastAPI) -> None:
     @app.post("/v1/login")
     def login(user_email: str, password: str, db: Session = Depends(get_db)):
         try:
-            user = db.query(User).filter(User.email == user_email).first()
+            users = UserRepository(db)
+            user = users.get_by_email(user_email)
             if not user or not user.verify_password(password):
                 return JSONResponse(status_code=400, content={"detail": "Invalid username or password"})
             access, refresh = create_token(
@@ -118,16 +124,11 @@ def register_routes(app: FastAPI) -> None:
     @app.post("/v1/register")
     def register(username: str, user_email: str, password: str, db: Session = Depends(get_db)):
         try:
-            existing_user = (
-                db.query(User)
-                .filter((User.username == username) | (User.email == user_email))
-                .first()
-            )
-            if existing_user:
+            users = UserRepository(db)
+            if users.get_by_email(user_email) or users.get_by_username(username):
                 raise Exception("Username or email already exists")
             new_user = User(username=username, email=user_email)
             new_user.set_password(password)
-            new_user.created_at = datetime.now()
             db.add(new_user)
             db.commit()
             db.refresh(new_user)
@@ -152,17 +153,10 @@ def register_routes(app: FastAPI) -> None:
     @app.get("/v1/new_chat")
     def new_chat(user=Depends(get_user), db: Session = Depends(get_db)):
         try:
-            chat_id = uuid.uuid4()
-            chat = ChatHistory(
-                id=uuid.uuid4(),
-                user_id=user.id,
-                chat_id=chat_id,
-                messages=[],
-            )
-            db.add(chat)
+            chats = ChatRepository(db)
+            chat = chats.create_chat(user.id)
             db.commit()
-            db.refresh(chat)
-            return JSONResponse(status_code=200, content={"chat_id": str(chat_id)})
+            return JSONResponse(status_code=200, content={"chat_id": str(chat.chat_id)})
         except Exception as e:
             traceback.print_exc()
             return JSONResponse(status_code=400, content={"detail": f"Failed to create new chat: {str(e)}"})

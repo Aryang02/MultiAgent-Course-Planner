@@ -147,35 +147,34 @@ Proposed `docker-compose.yml` services:
 
 ### 1.1 — Alembic migrations
 
-- [ ] Add `alembic` and initialize: `alembic init alembic`
-- [ ] Point Alembic at `src/core/models.py` metadata
-- [ ] Generate initial migration from current models
-- [ ] Remove `Base.metadata.create_all()` from API startup; run migrations in entrypoint instead
-- [ ] Add migration step to Docker entrypoint: `alembic upgrade head`
+- [x] Add `alembic` and initialize: `alembic init alembic`
+- [x] Point Alembic at `src/core/models.py` metadata
+- [x] Generate initial migration from current models
+- [x] Remove `Base.metadata.create_all()` from API startup; run migrations in entrypoint instead
+- [x] Add migration step to Docker entrypoint: `alembic upgrade head`
 
 ### 1.2 — Fix ORM model inconsistencies
 
-| Bug | Location | Fix |
-|-----|----------|-----|
-| `ChatHistory` uses `history=[]` in API but model has `messages` | `api.py` `new_chat` | Align field names |
-| `ChatHistory` missing `created_at` used in API | `api.py` | Add column or remove usage |
-| `new_chat` passes `id=chat_id` but model has separate `id` and `chat_id` | `api.py` | Use correct PK/FK pattern |
-| `StudyPlan` has `notes`/`test` but MCP uses `plan=` | `planner_server.py` | Align MCP tool with model |
-| `AuthToken` model exists but login doesn't persist tokens | `auth.py` | Implement token storage + refresh |
+| Bug | Location | Fix | Status |
+|-----|----------|-----|--------|
+| `ChatHistory` uses `history=[]` in API but model has `messages` | `api.py` `new_chat` | Align field names | Done |
+| `new_chat` passes `id=chat_id` but model has separate `id` and `chat_id` | `api.py` | Use correct PK/FK pattern | Done |
+| `StudyPlan` has `notes`/`test` but MCP uses `plan=` | `planner_server.py` | Align MCP tool with model | Done |
+| `AuthToken` model exists but login doesn't persist tokens | `auth.py` | Implement token storage + refresh | Phase 6 |
 
 ### 1.3 — Database session management
 
-- [ ] Create `src/database/session.py` with:
+- [x] Create `src/database/session.py` with:
   - `get_db()` — FastAPI dependency (generator)
   - `get_db_session()` — context manager for non-FastAPI code (MCP, Celery)
-- [ ] Fix all MCP tools to use `get_db_session()` instead of calling `get_db()` incorrectly
-- [ ] Add connection pool settings: `pool_size=10`, `max_overflow=20`, `pool_pre_ping=True`
+- [x] Fix all MCP tools to use `get_db_session()` instead of calling `get_db()` incorrectly
+- [x] Add connection pool settings: `pool_size=10`, `max_overflow=20`, `pool_pre_ping=True`
 
 ### 1.4 — Repository layer (optional but recommended)
 
-- [ ] Add `src/repositories/` with typed query methods:
+- [x] Add `src/repositories/` with typed query methods:
   - `UserRepository`, `ChatRepository`, `StudyPlanRepository`, `AgentRunRepository`
-- [ ] Keeps MCP tools and API routes thin; centralizes query logic
+- [x] Keeps MCP tools and API routes thin; centralizes query logic
 
 **Deliverable:** `alembic upgrade head` creates a correct schema; all DB access uses proper sessions.
 
