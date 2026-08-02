@@ -8,6 +8,7 @@ MODULES = [
     "src.settings",
     "src.core.models",
     "src.core.api",
+    "src.api.app",
     "src.database.db",
     "src.database.data_ingestion",
     "src.auth.auth",

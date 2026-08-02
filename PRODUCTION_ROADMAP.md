@@ -186,12 +186,12 @@ Proposed `docker-compose.yml` services:
 
 ### 2.1 — Request/response schemas
 
-- [ ] Complete `src/serializers/backend.py` with proper Pydantic v2 models:
+- [x] Complete `src/serializers/backend.py` with proper Pydantic v2 models:
   - `RegisterRequest`, `LoginRequest`, `TokenResponse`
   - `UploadResponse`, `GenerateRequest`, `GenerateResponse`
   - `ChatResponse`, `NewChatResponse`, `StudyPlanResponse`
-- [ ] Replace bare query params with `Body()` models on all POST routes
-- [ ] Add response models (`response_model=`) to all endpoints
+- [x] Replace bare query params with `Body()` models on all POST routes
+- [x] Add response models (`response_model=`) to all endpoints
 
 ### 2.2 — Fix and complete endpoints
 

@@ -34,6 +34,9 @@ class Settings:
     MCP_TUTOR_URL: str = os.getenv("MCP_TUTOR_URL", "http://localhost:8003/mcp/")
     MCP_CRITIC_URL: str = os.getenv("MCP_CRITIC_URL", "http://localhost:8004/mcp/")
     MCP_NOTES_URL: str = os.getenv("MCP_NOTES_URL", "http://localhost:8005/mcp/")
+    CORS_ORIGINS: str = os.getenv(
+        "CORS_ORIGINS", "http://localhost:3000,http://localhost:8000"
+    )
 
 
 settings = Settings()

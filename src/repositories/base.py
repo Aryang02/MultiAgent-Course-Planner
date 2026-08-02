@@ -84,6 +84,13 @@ class StudyPlanRepository:
             .first()
         )
 
+    def get_by_id(self, user_id: uuid.UUID, plan_id: uuid.UUID) -> StudyPlan | None:
+        return (
+            self.db.query(StudyPlan)
+            .filter(StudyPlan.user_id == user_id, StudyPlan.id == plan_id)
+            .first()
+        )
+
     def list_for_user(self, user_id: uuid.UUID) -> list[StudyPlan]:
         return (
             self.db.query(StudyPlan)
