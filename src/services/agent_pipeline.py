@@ -1,11 +1,13 @@
 """Agent pipeline service — orchestrates planner → tutor → notes → critic."""
 
 import asyncio
+import time
 import uuid
 from datetime import datetime, timezone
 
 from src.agents.registry import create_default_executor
 from src.database.session import get_db_session
+from src.observability.metrics import record_pipeline_duration
 from src.repositories import AgentRunRepository, ChatRepository, StudyPlanRepository
 
 
@@ -86,4 +88,8 @@ def run_pipeline(
     query: str,
     run_id: uuid.UUID | None = None,
 ) -> dict:
-    return asyncio.run(_run_pipeline_async(user_id, chat_id, query))
+    started = time.perf_counter()
+    try:
+        return asyncio.run(_run_pipeline_async(user_id, chat_id, query))
+    finally:
+        record_pipeline_duration(time.perf_counter() - started)

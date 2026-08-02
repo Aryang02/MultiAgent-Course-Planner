@@ -1,7 +1,7 @@
 import logging
 import uuid
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
@@ -16,7 +16,11 @@ logger = logging.getLogger(__name__)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
-def get_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> UserModel:
+def get_user(
+    request: Request,
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+) -> UserModel:
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
         if payload.get("type") != "access":
@@ -33,6 +37,7 @@ def get_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db))
         user = db.query(UserModel).filter(UserModel.id == uuid.UUID(user_id)).first()
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
+        request.state.user_id = user.id
         return user
     except (JWTError, ValueError):
         logger.debug("Token validation failed")

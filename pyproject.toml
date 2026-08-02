@@ -35,6 +35,11 @@ dependencies = [
     "celery[redis]>=5.6.0,<6",
     "redis>=5.2.0,<6",
     "slowapi>=0.1.9,<0.2",
+    "structlog>=24.4.0,<25",
+    "prometheus-fastapi-instrumentator>=7.0.0,<8",
+    "prometheus-client>=0.21.0,<0.22",
+    "gunicorn>=23.0.0,<24",
+    "sentry-sdk[fastapi,celery,redis,sqlalchemy]>=2.19.0,<3",
 ]
 
 [project.optional-dependencies]

@@ -138,3 +138,4 @@ class ReadyResponse(BaseModel):
     status: str
     database: str
     redis: str
+    pinecone: str

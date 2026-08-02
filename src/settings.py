@@ -40,6 +40,12 @@ class Settings:
     MAX_UPLOAD_FILE_SIZE_MB: int = int(os.getenv("MAX_UPLOAD_FILE_SIZE_MB", "50"))
     MAX_UPLOAD_REQUEST_SIZE_MB: int = int(os.getenv("MAX_UPLOAD_REQUEST_SIZE_MB", "200"))
     DEFAULT_VECTOR_INDEX: str = os.getenv("DEFAULT_VECTOR_INDEX", "vector_db_index")
+    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+    LOG_JSON: bool = os.getenv("LOG_JSON", "true").lower() in {"1", "true", "yes"}
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
+    SENTRY_DSN: str = os.getenv("SENTRY_DSN", "")
+    SENTRY_TRACES_SAMPLE_RATE: float = float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.1"))
+    API_SERVER: str = os.getenv("API_SERVER", "gunicorn")
 
 
 settings = Settings()

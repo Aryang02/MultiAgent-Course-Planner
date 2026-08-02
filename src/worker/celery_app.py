@@ -1,6 +1,15 @@
 from celery import Celery
 
+from src.observability.celery_signals import (  # noqa: F401
+    on_task_failure,
+    on_task_postrun,
+    on_task_prerun,
+    on_task_retry,
+)
+from src.observability.logging import configure_logging
 from src.settings import settings
+
+configure_logging(json_logs=settings.LOG_JSON, log_level=settings.LOG_LEVEL)
 
 celery_app = Celery("course_planner")
 celery_app.config_from_object("src.worker.config")

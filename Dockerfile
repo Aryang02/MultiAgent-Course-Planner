@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY pyproject.toml README.md alembic.ini ./
+COPY pyproject.toml README.md alembic.ini gunicorn.conf.py ./
 COPY alembic ./alembic
 COPY src ./src
 COPY scripts ./scripts
