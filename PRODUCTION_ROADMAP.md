@@ -82,32 +82,32 @@ flowchart TB
 
 ### 0.1 — Repository structure and dependency management
 
-- [ ] Replace flat `requirements.txt` with **`pyproject.toml`** (or split `requirements/base.txt`, `dev.txt`, `prod.txt`)
-- [ ] Pin all dependency versions; use `pip-tools` or `uv` for lockfiles
-- [ ] Add **`.env.example`** documenting every required variable from `src/settings.py`
-- [ ] Add **`Makefile`** with targets: `install`, `lint`, `test`, `migrate`, `up`, `down`
-- [ ] Normalize all imports to a single style (`from src.` prefix everywhere)
-- [ ] Add `src/__init__.py` and package structure so `PYTHONPATH` is not fragile
+- [x] Replace flat `requirements.txt` with **`pyproject.toml`** (or split `requirements/base.txt`, `dev.txt`, `prod.txt`)
+- [x] Pin all dependency versions; use `pip-tools` or `uv` for lockfiles
+- [x] Add **`.env.example`** documenting every required variable from `src/settings.py`
+- [x] Add **`Makefile`** with targets: `install`, `lint`, `test`, `migrate`, `up`, `down`
+- [x] Normalize all imports to a single style (`from src.` prefix everywhere)
+- [x] Add `src/__init__.py` and package structure so `PYTHONPATH` is not fragile
 
 **Deliverable:** `pip install -e ".[dev]"` works on a clean machine.
 
 ### 0.2 — Python 3.12 upgrade
 
-- [ ] Update `Dockerfile` base image: `python:3.12-slim`
-- [ ] Update `docker-compose.yml` build contexts
-- [ ] Verify compatibility of key packages on 3.12:
+- [x] Update `Dockerfile` base image: `python:3.12-slim`
+- [x] Update `docker-compose.yml` build contexts
+- [x] Verify compatibility of key packages on 3.12:
   - `google-adk`, `a2a-sdk`, `mcp[cli]`, `langchain-*`, `pinecone`
-- [ ] Add `requires-python = ">=3.12,<3.13"` in `pyproject.toml`
-- [ ] Run full import smoke test after upgrade
+- [x] Add `requires-python = ">=3.12,<3.13"` in `pyproject.toml`
+- [x] Run full import smoke test after upgrade
 
 **Deliverable:** All modules import cleanly on Python 3.12.
 
 ### 0.3 — PostgreSQL 17 upgrade
 
-- [ ] Change `docker-compose.yml`: `image: postgres:17`
-- [ ] Update `DB_URL` format in `.env.example` for Postgres 17
-- [ ] Verify SQLAlchemy 2.x compatibility with Postgres 17
-- [ ] Add healthcheck: `pg_isready -U admin -d demo`
+- [x] Change `docker-compose.yml`: `image: postgres:17`
+- [x] Update `DB_URL` format in `.env.example` for Postgres 17
+- [x] Verify SQLAlchemy 2.x compatibility with Postgres 17
+- [x] Add healthcheck: `pg_isready -U admin -d demo`
 
 **Deliverable:** App connects to Postgres 17; tables create successfully.
 
@@ -115,12 +115,12 @@ flowchart TB
 
 Current issues to fix:
 
-| Issue | Fix |
-|-------|-----|
-| `mcp_app` builds from `./src/core` (no Dockerfile) | Single root `Dockerfile` with multi-stage build |
-| `mcp_agents` runs missing `server.py` | Dedicated `Dockerfile.worker` or service commands |
-| MCP servers started inside API process | Separate compose services per MCP server |
-| No healthchecks | Add for all services |
+| Issue | Fix | Status |
+|-------|-----|--------|
+| `mcp_app` builds from `./src/core` (no Dockerfile) | Single root `Dockerfile` with multi-stage build | Done |
+| `mcp_agents` runs missing `server.py` | MCP servers as separate compose services | Done |
+| MCP servers started inside API process | Separate compose services per MCP server | Done |
+| No healthchecks | Add for all services | Done |
 
 Proposed `docker-compose.yml` services:
 

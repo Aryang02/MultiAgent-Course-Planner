@@ -1,47 +1,130 @@
-version: "3.9"
-
 services:
-  mcp_db:
-    image: postgres:15
+  db:
+    image: postgres:17
     container_name: mcp_db
-    restart: always
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin123
-      POSTGRES_DB: demo
+      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-admin123}
+      POSTGRES_DB: ${DB_NAME:-demo}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-admin} -d ${DB_NAME:-demo}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
-  mcp_app:
-    build: ./src/core
-    container_name: mcp_app
-    restart: always
-    depends_on:
-      - mcp_db
-      - mcp_agents
+  redis:
+    image: redis:7-alpine
+    container_name: mcp_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      target: api
+    container_name: mcp_api
+    restart: unless-stopped
     env_file:
       - .env
     ports:
       - "8000:8000"
-    volumes:
-      - ./src:/app
-    command: ["./entrypoint.sh"]
-
-  mcp_agents:
-    build: ./src/agents
-    container_name: mcp_agents
-    restart: always
     depends_on:
-      - mcp_db
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+      - ./scripts:/app/scripts
+
+  mcp-orchestrator:
+    build:
+      context: .
+      target: mcp
+    container_name: mcp_orchestrator
+    restart: unless-stopped
     env_file:
       - .env
+    command: ["python", "-m", "src.mcp.orchestrator_server"]
     ports:
-      - "8500:8500"
-    volumes:
-      - ./src/agents:/app
-    command: ["python", "server.py"]
+      - "8001:8001"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  mcp-planner:
+    build:
+      context: .
+      target: mcp
+    container_name: mcp_planner
+    restart: unless-stopped
+    env_file:
+      - .env
+    command: ["python", "-m", "src.mcp.planner_server"]
+    ports:
+      - "8002:8002"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  mcp-tutor:
+    build:
+      context: .
+      target: mcp
+    container_name: mcp_tutor
+    restart: unless-stopped
+    env_file:
+      - .env
+    command: ["python", "-m", "src.mcp.tutor_server"]
+    ports:
+      - "8003:8003"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  mcp-critic:
+    build:
+      context: .
+      target: mcp
+    container_name: mcp_critic
+    restart: unless-stopped
+    env_file:
+      - .env
+    command: ["python", "-m", "src.mcp.critic_server"]
+    ports:
+      - "8004:8004"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  mcp-notes:
+    build:
+      context: .
+      target: mcp
+    container_name: mcp_notes
+    restart: unless-stopped
+    env_file:
+      - .env
+    command: ["python", "-m", "src.mcp.notes_server"]
+    ports:
+      - "8005:8005"
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   postgres_data:
+  redis_data:
