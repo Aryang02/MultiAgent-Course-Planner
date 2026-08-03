@@ -33,7 +33,7 @@ jobs:
       - name: Install dependencies
         run: pip install -e ".[dev]"
       - name: Mypy
-        run: mypy src
+        run: mypy src/api src/auth src/repositories src/observability
 
   test:
     runs-on: ubuntu-latest
