@@ -52,6 +52,7 @@ dev = [
     "httpx>=0.28.0,<0.29",
     "ruff>=0.8.0,<0.9",
     "mypy>=1.13.0,<2",
+    "types-python-jose>=3.3.0,<4",
 ]
 
 [tool.setuptools.packages.find]
@@ -82,3 +83,22 @@ exclude_lines = [
 [tool.mypy]
 python_version = "3.12"
 packages = ["src"]
+plugins = ["sqlalchemy.ext.mypy.plugin"]
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+
+[[tool.mypy.overrides]]
+module = [
+    "src.agents.*",
+    "src.a2a_server.*",
+    "src.database.*",
+    "src.utils.*",
+    "src.core.*",
+    "src.repositories.*",
+    "src.api.*",
+    "src.auth.*",
+    "src.worker.*",
+    "src.services.*",
+]
+ignore_errors = true

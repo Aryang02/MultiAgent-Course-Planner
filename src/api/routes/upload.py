@@ -30,9 +30,7 @@ def upload(
     data_ingestion = DataIngestion(index_name=index_name)
 
     try:
-        file_records = data_ingestion.save_uploaded_files(
-            documents, upload_dir=f"data/{user.id}"
-        )
+        file_records = data_ingestion.save_uploaded_files(documents, upload_dir=f"data/{user.id}")
     except ValueError as exc:
         raise AppError(str(exc), status_code=400) from exc
 
