@@ -1,3 +1,22 @@
-# Deprecated: use pyproject.toml instead.
-# Kept for compatibility with tools that expect requirements.txt.
--e .
+google-generativeai
+pinecone-client
+langchain-google-genai
+python-dotenv
+fastapi
+bcrypt
+uvicorn
+sqlalchemy
+psycopg2-binary
+pydantic
+python-multipart
+python-docx
+Pillow
+langchain-community
+python-jose
+langchain
+streamlit
+langchain-pinecone
+pinecone
+a2a-sdk
+google-adk
+mcp[cli]

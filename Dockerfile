@@ -1,36 +1,21 @@
-FROM python:3.12-slim AS base
+FROM python:3.10-slim
 
 WORKDIR /app
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y \
     build-essential \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY pyproject.toml README.md alembic.ini gunicorn.conf.py ./
-COPY alembic ./alembic
-COPY src ./src
-COPY scripts ./scripts
+COPY requirements.txt /app/
+RUN pip install --no-cache-dir -r requirements.txt
 
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -e .
+COPY . /app
 
-FROM base AS api
+RUN chmod +x ./entrypoint.sh
 
-COPY entrypoint.sh ./
-RUN chmod +x entrypoint.sh
+ENV PYTHONPATH=/app/src
 
 EXPOSE 8000
+
 CMD ["./entrypoint.sh"]
-
-FROM base AS mcp
-
-EXPOSE 8001 8002 8003 8004 8005
-
-FROM base AS worker
-
-CMD ["celery", "-A", "src.worker.celery_app", "worker", "--loglevel=info"]

@@ -1,8 +1,0 @@
-tests/
-__pycache__/
-*.py[cod]
-.venv/
-.env
-data/
-postgres_data/
-redis_data/
