@@ -1,35 +1,26 @@
+from core.models import AgentMessage, AgentRun
 from ..base_agent import BaseAgent
-from src.agents.utils import parse_json_response
-from src.utils.prompts import CRITIC_DESCRIPTION, CRITIC_SYSTEM_PROMPT
-
+from database.db import get_db
+from sqlalchemy.orm import Session
+from src.utils.mcp_connect import McpConnector
+from google.adk.agents.llm_agent import LlmAgent
+from src.utils.prompts import CRITIC_SYSTEM_PROMPT, CRITIC_DESCRIPTION
 
 class CriticAgent(BaseAgent):
     def __init__(self):
-        super().__init__(
-            instruction=CRITIC_SYSTEM_PROMPT,
-            description=CRITIC_DESCRIPTION,
-            name="critic",
-        )
+        super().__init__(instruction=CRITIC_SYSTEM_PROMPT,
+                         description=CRITIC_DESCRIPTION,
+                         name="critic")
+        self.mcp_client = McpConnector('critic_server')
+        self.tools = self.mcp_client.get_tools()
 
-    def create_test(self, notes: dict | str) -> dict:
-        content = notes if isinstance(notes, str) else str(notes)
-        prompt = (
-            "Create 5 quiz questions with answers based on the following study material.\n"
-            f"{content}\n"
-            'Return JSON: {"questions": [{"question": "...", "answer": "..."}]}'
-        )
-        text = self.generate(prompt)
-        try:
-            parsed = parse_json_response(text)
-            if isinstance(parsed, dict) and "questions" in parsed:
-                return parsed
-        except (ValueError, TypeError):
-            pass
-        return {"questions": [], "raw": text}
+    def critique(self, explanation: str):
+        prompt = f"Generate test questions to be given to the user and the answers for them separately based on the following explanation: {explanation}"
+        return self.run(prompt)
+    
+    async def run(self, run_id, prompt, db: Session):
 
-    def critique(self, explanation: str) -> str:
-        prompt = (
-            "Generate test questions and separate answers based on this explanation:\n"
-            f"{explanation}"
-        )
-        return self.generate(prompt)
+        self.messages = db.query(AgentMessage).filter(run_id = run_id).all()
+        self.add_message(self.messages, prompt, "AIMessage")
+
+

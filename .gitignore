@@ -2,13 +2,3 @@
 .env
 __pycache__/
 *.pyc
-*.egg-info/
-.pytest_cache/
-.coverage
-htmlcov/
-.mypy_cache/
-.ruff_cache/
-data/
-frontend/node_modules/
-frontend/dist/
-.coverage

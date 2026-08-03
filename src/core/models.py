@@ -36,10 +36,6 @@ class Document(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     file_name = Column(String(255), nullable=False)
     file_path = Column(String(512), nullable=False)
-    status = Column(String(32), nullable=False, default="pending", index=True)
-    chunk_count = Column(Integer, nullable=True)
-    error_message = Column(String(1024), nullable=True)
-    index_name = Column(String(128), nullable=False, default="vector_db_index")
     uploaded_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     user = relationship("User", back_populates="documents")

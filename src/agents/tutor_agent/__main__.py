@@ -1,12 +1,12 @@
 from a2a.types import AgentCard, AgentCapabilities, AgentSkill
-from src.settings import settings
+from settings import settings
 
-APP_URL = settings.APP_URL
+APP_URL = settings.APP_URL 
 
 skills = [
     AgentSkill(
         name="create_subtopics",
-        description="Create subtopics for a given main topic.",
+        description="Create subtopics for a given main topic."
     )
 ]
 
@@ -17,7 +17,7 @@ tutor_agent_card = AgentCard(
         "It generates subtopics based on provided main topics and ensures they are relevant and comprehensive."
     ),
     url=f"{APP_URL}:10003",
-    capabilities=AgentCapabilities(skills=skills),
+    capabilities=AgentCapabilities(skills=skills)
 )
 
 if __name__ == "__main__":
