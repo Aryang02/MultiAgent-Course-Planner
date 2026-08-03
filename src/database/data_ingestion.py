@@ -5,10 +5,10 @@ from typing import Any
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
 from pinecone import Pinecone, ServerlessSpec
 
+from src.llm.embeddings import get_embeddings
 from src.settings import settings
 
 ALLOWED_EXTENSIONS = {".pdf", ".txt", ".docx"}
@@ -22,10 +22,7 @@ def sanitize_filename(filename: str) -> str:
 class DataIngestion:
     def __init__(self, index_name: str | None = None):
         self.index_name = index_name or settings.DEFAULT_VECTOR_INDEX
-        self.embeddings = GoogleGenerativeAIEmbeddings(
-            google_api_key=settings.GOOGLE_API_KEY,
-            model="gemini-embedding-1024",
-        )
+        self.embeddings = get_embeddings()
         self.pc = Pinecone(api_key=settings.PINECONE_API_KEY)
         self.index = self.create_or_update_index(self.index_name)
         self.vectorstore = PineconeVectorStore(
@@ -43,7 +40,7 @@ class DataIngestion:
         if index_name not in existing_indexes:
             self.pc.create_index(
                 name=index_name,
-                dimension=768,
+                dimension=settings.EMBEDDING_DIMENSION,
                 metric="cosine",
                 spec=ServerlessSpec(cloud="aws", region="us-east-1"),
             )

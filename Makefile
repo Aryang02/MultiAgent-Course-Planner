@@ -1,4 +1,4 @@
-.PHONY: install install-dev lint format test migrate up down logs smoke
+.PHONY: install install-dev lint format test migrate up down logs smoke frontend-install frontend-dev frontend-build codegen
 
 install:
 	pip install -e .
@@ -30,4 +30,16 @@ logs:
 	docker compose logs -f api
 
 smoke:
-	python scripts/smoke_imports.py
+	python3 scripts/smoke_imports.py
+
+frontend-install:
+	cd frontend && npm install
+
+frontend-dev:
+	cd frontend && npm run dev
+
+frontend-build:
+	cd frontend && npm run build
+
+codegen:
+	cd frontend && npm run codegen

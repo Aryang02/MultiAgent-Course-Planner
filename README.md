@@ -13,14 +13,14 @@ A multi-agent learning platform that generates personalized study plans from upl
 
 ## Quick Start
 
-**Prerequisites:** Docker, Docker Compose, and API keys for [Google Gemini](https://ai.google.dev/) and [Pinecone](https://www.pinecone.io/).
+**Prerequisites:** Docker, Docker Compose, and API keys for your chosen LLM provider (e.g. [Google Gemini](https://ai.google.dev/), [OpenAI](https://platform.openai.com/), or [Anthropic](https://www.anthropic.com/)) and [Pinecone](https://www.pinecone.io/).
 
 ```bash
 git clone https://github.com/Aryang02/MultiAgent-Course-Planner.git
 cd MultiAgent-Course-Planner
 
 cp .env.example .env
-# Edit .env — at minimum set SECRET_KEY, GOOGLE_API_KEY, PINECONE_API_KEY
+# Edit .env — at minimum set SECRET_KEY, provider API key(s), PINECONE_API_KEY
 
 make up
 ```
@@ -29,6 +29,7 @@ Wait for all services to become healthy (~30 seconds), then open:
 
 | URL | Purpose |
 |-----|---------|
+| http://localhost:3000 | Web UI (React frontend) |
 | http://localhost:8000/docs | Interactive API docs (Swagger) |
 | http://localhost:8000/health | Liveness probe |
 | http://localhost:8000/ready | Readiness probe (DB, Redis, Pinecone) |
@@ -88,6 +89,31 @@ make migrate       # alembic upgrade head
 
 For local API reload without Gunicorn, set `API_SERVER=uvicorn` in `.env`.
 
+### Frontend development
+
+The web UI lives in `frontend/` (Vite + React + TypeScript + Tailwind).
+
+```bash
+# Terminal 1 — backend (or use make up)
+make up
+
+# Terminal 2 — frontend dev server
+make frontend-install
+make frontend-dev
+```
+
+Open http://localhost:3000. The Vite dev server proxies `/v1` requests to the API on port 8000.
+
+Optional: regenerate TypeScript types from the running API:
+
+```bash
+make codegen   # requires API at http://localhost:8000
+```
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `VITE_API_URL` | `""` (same origin) | API base URL; set for production builds |
+
 ### Pre-commit hooks
 
 ```bash
@@ -101,7 +127,14 @@ pre-commit run --all-files
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `SECRET_KEY` | Yes | — | JWT signing key (use a long random string) |
-| `GOOGLE_API_KEY` | Yes | — | Google Gemini API key |
+| `LLM_MODEL` | No | `gemini/gemini-1.5-pro` | LiteLLM model string for agent text generation |
+| `LLM_TEMPERATURE` | No | `0.7` | LLM sampling temperature |
+| `LLM_MAX_TOKENS` | No | `4096` | Max tokens per LLM response |
+| `EMBEDDING_MODEL` | No | `gemini/gemini-embedding-001` | Embedding model for RAG |
+| `EMBEDDING_DIMENSION` | No | `768` | Pinecone index dimension (must match embedding model) |
+| `GOOGLE_API_KEY` | If using Gemini | — | Google API key (also read by LiteLLM) |
+| `OPENAI_API_KEY` | If using OpenAI | — | OpenAI API key (read by LiteLLM) |
+| `ANTHROPIC_API_KEY` | If using Anthropic | — | Anthropic API key (read by LiteLLM) |
 | `PINECONE_API_KEY` | Yes | — | Pinecone API key |
 | `DB_URL` | Yes | local postgres | SQLAlchemy connection string |
 | `REDIS_URL` | Yes | `redis://redis:6379/0` | Redis for cache and blocklist |
@@ -134,6 +167,7 @@ See [.env.example](.env.example) for the complete list.
 | `mcp-tutor` | 8003 | Document search (RAG) |
 | `mcp-critic` | 8004 | Agent conversation logs |
 | `mcp-notes` | 8005 | Agent conversation logs |
+| `frontend` | 3000 | React web UI (nginx in production) |
 
 ## Stack
 
@@ -145,7 +179,8 @@ See [.env.example](.env.example) for the complete list.
 | Task queue | Celery 5.6, Redis 7 |
 | Database | PostgreSQL 17 |
 | Vector store | Pinecone (per-user namespaces) |
-| LLM | Google Gemini |
+| LLM | LiteLLM (OpenAI, Anthropic, Gemini, etc.) |
+| Frontend | React 19, Vite, Tailwind, TanStack Query |
 | Agents | Custom executor + MCP + A2A discovery |
 | Observability | structlog, Prometheus, Sentry (optional) |
 | CI | GitHub Actions (lint, typecheck, test, build) |

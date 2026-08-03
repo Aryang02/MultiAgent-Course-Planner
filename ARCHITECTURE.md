@@ -149,7 +149,7 @@ Task ownership is tracked in Redis so `GET /v1/tasks/{task_id}` only returns res
 
 `AgentExecutor` (`src/agents/agent_executor.py`) coordinates agent-to-agent messaging and logs each step to `agent_messages`. The default graph is defined in `src/agents/registry.py`.
 
-LLM calls go through `src/agents/llm_client.py` (Google Gemini wrapper with token usage metrics).
+LLM calls go through `src/agents/llm_client.py` (LiteLLM wrapper with configurable provider/model and token usage metrics). Embeddings use `src/llm/embeddings.py`.
 
 ### MCP tool servers (`src/mcp/`)
 
