@@ -73,17 +73,12 @@ def test_record_pipeline_duration_and_llm_tokens():
 def test_llm_client_records_token_usage():
     from src.agents import llm_client
 
-    response = MagicMock()
-    response.text = "hello"
-    response.usage_metadata = MagicMock(prompt_token_count=5, candidates_token_count=7)
+    mock_response = MagicMock()
+    mock_response.choices = [MagicMock(message=MagicMock(content="hello"))]
+    mock_response.usage = MagicMock(prompt_tokens=5, completion_tokens=7)
 
-    mock_model = MagicMock()
-    mock_model.generate_content.return_value = response
-
-    with patch.object(llm_client.genai, "configure"):
-        with patch.object(llm_client.genai, "GenerativeModel", return_value=mock_model):
-            with patch.object(llm_client.settings, "GOOGLE_API_KEY", "test-key"):
-                with patch.object(llm_client, "record_llm_tokens") as mock_record:
-                    result = llm_client.generate("system", "prompt")
+    with patch("src.agents.llm_client.litellm.completion", return_value=mock_response):
+        with patch.object(llm_client, "record_llm_tokens") as mock_record:
+            result = llm_client.generate("system", "prompt")
     assert result == "hello"
-    mock_record.assert_called_once_with("gemini-1.5-pro", 5, 7)
+    mock_record.assert_called_once_with("gemini/gemini-1.5-pro", 5, 7)
