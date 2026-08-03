@@ -1,27 +1,23 @@
 from a2a.types import AgentCard, AgentCapabilities, AgentSkill
-from settings import settings
+from src.settings import settings
 
-APP_URL = settings.APP_URL 
+APP_URL = settings.APP_URL
 
 skills = [
     AgentSkill(
-        name="note_summarization",
-        description="Summarize long notes into concise key points."
-    ),
-    AgentSkill(
-        name="note_generation",
-        description="Generate well-structured notes from a given topic."
+        name="create_study_plan",
+        description="Create a structured study plan for a given topic.",
     )
 ]
 
 planner_agent_card = AgentCard(
-    name="notes-agent",
+    name="planner-agent",
     description=(
         "An agent that plans the course of study for users effectively. "
-        "It can generate study plans based on provided topic and ensure they are well-organized."
+        "It generates study plans based on provided topics."
     ),
     url=f"{APP_URL}:10002",
-    capabilities=AgentCapabilities(skills=skills)
+    capabilities=AgentCapabilities(skills=skills),
 )
 
 if __name__ == "__main__":

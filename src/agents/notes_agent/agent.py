@@ -1,10 +1,6 @@
-# src/agents/notes_agent/agent.py
-
-import uuid
-import os
-from agents.base_agent import BaseAgent
-from src.utils.mcp_utils.mcp_connect import McpConnector
-from src.utils.prompts import NOTES_SYSTEM_PROMPT, NOTES_DESCRIPTION
+from ..base_agent import BaseAgent
+from src.agents.utils import parse_json_response
+from src.utils.prompts import NOTES_DESCRIPTION, NOTES_SYSTEM_PROMPT
 
 
 class NotesAgent(BaseAgent):
@@ -12,30 +8,25 @@ class NotesAgent(BaseAgent):
         super().__init__(
             instruction=NOTES_SYSTEM_PROMPT,
             description=NOTES_DESCRIPTION,
-            name="notes"
-        )
-        self.mcp_client = McpConnector("notes_server")
-        self.tools = self.mcp_client.get_tools() or []
-
-    async def summarize_notes(self, user_id: uuid.UUID, conversation_id: uuid.UUID, notes: str):
-        """
-        Summarize notes using the agent’s tools.
-        """
-        if not self.tools:
-            self.tools = await self.mcp_client.refresh_tools()
-
-        self.log_message(
-            user_id, conversation_id,
-            role="user", content=f"Summarize the following notes: {notes}"
+            name="notes",
         )
 
-        response = await self.run_agent(
-            user_id=user_id,
-            conversation_id=conversation_id,
-            tools=self.tools,
-            max_retries=3
+    def create_notes(self, topics: list[str]) -> dict:
+        topics_str = ", ".join(topics)
+        prompt = (
+            f"Create comprehensive structured study notes for these topics: {topics_str}\n"
+            'Return JSON with keys: "summary" (string) and "sections" '
+            '(array of objects with "title" and "content").'
         )
+        text = self.generate(prompt)
+        try:
+            parsed = parse_json_response(text)
+            if isinstance(parsed, dict):
+                return parsed
+        except (ValueError, TypeError):
+            pass
+        return {"summary": text, "sections": []}
 
-        self.log_message(user_id, conversation_id, role="assistant", content=response)
-
-        return response
+    def summarize_notes(self, notes: str) -> str:
+        prompt = f"Summarize the following notes concisely:\n{notes}"
+        return self.generate(prompt)

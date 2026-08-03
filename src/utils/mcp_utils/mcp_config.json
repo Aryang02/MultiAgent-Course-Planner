@@ -1,34 +1,24 @@
 {
-    "mcpServers":{
+    "mcpServers": {
         "planner_server": {
             "command": "streamble_http",
-            "args": [
-                "http://localhost:8002/mcp/"
-            ]
+            "args": ["http://localhost:8002/mcp/"]
         },
         "critic_server": {
             "command": "streamble_http",
-            "args": [
-                "http://localhost:8004/mcp/"
-            ]
+            "args": ["http://localhost:8004/mcp/"]
         },
         "tutor_server": {
             "command": "streamble_http",
-            "args": [
-                "http://localhost:8003/mcp/"
-            ]
+            "args": ["http://localhost:8003/mcp/"]
         },
         "orchestrator_server": {
             "command": "streamble_http",
-            "args": [
-                "http://localhost:8001/mcp/"
-            ]
+            "args": ["http://localhost:8001/mcp/"]
         },
         "notes_server": {
             "command": "streamble_http",
-            "args": [
-                "http://localhost:8005/mcp/"
-            ]
+            "args": ["http://localhost:8005/mcp/"]
         }
-    }    
+    }
 }

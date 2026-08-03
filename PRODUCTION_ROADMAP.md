@@ -82,32 +82,32 @@ flowchart TB
 
 ### 0.1 — Repository structure and dependency management
 
-- [ ] Replace flat `requirements.txt` with **`pyproject.toml`** (or split `requirements/base.txt`, `dev.txt`, `prod.txt`)
-- [ ] Pin all dependency versions; use `pip-tools` or `uv` for lockfiles
-- [ ] Add **`.env.example`** documenting every required variable from `src/settings.py`
-- [ ] Add **`Makefile`** with targets: `install`, `lint`, `test`, `migrate`, `up`, `down`
-- [ ] Normalize all imports to a single style (`from src.` prefix everywhere)
-- [ ] Add `src/__init__.py` and package structure so `PYTHONPATH` is not fragile
+- [x] Replace flat `requirements.txt` with **`pyproject.toml`** (or split `requirements/base.txt`, `dev.txt`, `prod.txt`)
+- [x] Pin all dependency versions; use `pip-tools` or `uv` for lockfiles
+- [x] Add **`.env.example`** documenting every required variable from `src/settings.py`
+- [x] Add **`Makefile`** with targets: `install`, `lint`, `test`, `migrate`, `up`, `down`
+- [x] Normalize all imports to a single style (`from src.` prefix everywhere)
+- [x] Add `src/__init__.py` and package structure so `PYTHONPATH` is not fragile
 
 **Deliverable:** `pip install -e ".[dev]"` works on a clean machine.
 
 ### 0.2 — Python 3.12 upgrade
 
-- [ ] Update `Dockerfile` base image: `python:3.12-slim`
-- [ ] Update `docker-compose.yml` build contexts
-- [ ] Verify compatibility of key packages on 3.12:
+- [x] Update `Dockerfile` base image: `python:3.12-slim`
+- [x] Update `docker-compose.yml` build contexts
+- [x] Verify compatibility of key packages on 3.12:
   - `google-adk`, `a2a-sdk`, `mcp[cli]`, `langchain-*`, `pinecone`
-- [ ] Add `requires-python = ">=3.12,<3.13"` in `pyproject.toml`
-- [ ] Run full import smoke test after upgrade
+- [x] Add `requires-python = ">=3.12,<3.13"` in `pyproject.toml`
+- [x] Run full import smoke test after upgrade
 
 **Deliverable:** All modules import cleanly on Python 3.12.
 
 ### 0.3 — PostgreSQL 17 upgrade
 
-- [ ] Change `docker-compose.yml`: `image: postgres:17`
-- [ ] Update `DB_URL` format in `.env.example` for Postgres 17
-- [ ] Verify SQLAlchemy 2.x compatibility with Postgres 17
-- [ ] Add healthcheck: `pg_isready -U admin -d demo`
+- [x] Change `docker-compose.yml`: `image: postgres:17`
+- [x] Update `DB_URL` format in `.env.example` for Postgres 17
+- [x] Verify SQLAlchemy 2.x compatibility with Postgres 17
+- [x] Add healthcheck: `pg_isready -U admin -d demo`
 
 **Deliverable:** App connects to Postgres 17; tables create successfully.
 
@@ -115,12 +115,12 @@ flowchart TB
 
 Current issues to fix:
 
-| Issue | Fix |
-|-------|-----|
-| `mcp_app` builds from `./src/core` (no Dockerfile) | Single root `Dockerfile` with multi-stage build |
-| `mcp_agents` runs missing `server.py` | Dedicated `Dockerfile.worker` or service commands |
-| MCP servers started inside API process | Separate compose services per MCP server |
-| No healthchecks | Add for all services |
+| Issue | Fix | Status |
+|-------|-----|--------|
+| `mcp_app` builds from `./src/core` (no Dockerfile) | Single root `Dockerfile` with multi-stage build | Done |
+| `mcp_agents` runs missing `server.py` | MCP servers as separate compose services | Done |
+| MCP servers started inside API process | Separate compose services per MCP server | Done |
+| No healthchecks | Add for all services | Done |
 
 Proposed `docker-compose.yml` services:
 
@@ -147,35 +147,34 @@ Proposed `docker-compose.yml` services:
 
 ### 1.1 — Alembic migrations
 
-- [ ] Add `alembic` and initialize: `alembic init alembic`
-- [ ] Point Alembic at `src/core/models.py` metadata
-- [ ] Generate initial migration from current models
-- [ ] Remove `Base.metadata.create_all()` from API startup; run migrations in entrypoint instead
-- [ ] Add migration step to Docker entrypoint: `alembic upgrade head`
+- [x] Add `alembic` and initialize: `alembic init alembic`
+- [x] Point Alembic at `src/core/models.py` metadata
+- [x] Generate initial migration from current models
+- [x] Remove `Base.metadata.create_all()` from API startup; run migrations in entrypoint instead
+- [x] Add migration step to Docker entrypoint: `alembic upgrade head`
 
 ### 1.2 — Fix ORM model inconsistencies
 
-| Bug | Location | Fix |
-|-----|----------|-----|
-| `ChatHistory` uses `history=[]` in API but model has `messages` | `api.py` `new_chat` | Align field names |
-| `ChatHistory` missing `created_at` used in API | `api.py` | Add column or remove usage |
-| `new_chat` passes `id=chat_id` but model has separate `id` and `chat_id` | `api.py` | Use correct PK/FK pattern |
-| `StudyPlan` has `notes`/`test` but MCP uses `plan=` | `planner_server.py` | Align MCP tool with model |
-| `AuthToken` model exists but login doesn't persist tokens | `auth.py` | Implement token storage + refresh |
+| Bug | Location | Fix | Status |
+|-----|----------|-----|--------|
+| `ChatHistory` uses `history=[]` in API but model has `messages` | `api.py` `new_chat` | Align field names | Done |
+| `new_chat` passes `id=chat_id` but model has separate `id` and `chat_id` | `api.py` | Use correct PK/FK pattern | Done |
+| `StudyPlan` has `notes`/`test` but MCP uses `plan=` | `planner_server.py` | Align MCP tool with model | Done |
+| `AuthToken` model exists but login doesn't persist tokens | `auth.py` | Implement token storage + refresh | Phase 6 |
 
 ### 1.3 — Database session management
 
-- [ ] Create `src/database/session.py` with:
+- [x] Create `src/database/session.py` with:
   - `get_db()` — FastAPI dependency (generator)
   - `get_db_session()` — context manager for non-FastAPI code (MCP, Celery)
-- [ ] Fix all MCP tools to use `get_db_session()` instead of calling `get_db()` incorrectly
-- [ ] Add connection pool settings: `pool_size=10`, `max_overflow=20`, `pool_pre_ping=True`
+- [x] Fix all MCP tools to use `get_db_session()` instead of calling `get_db()` incorrectly
+- [x] Add connection pool settings: `pool_size=10`, `max_overflow=20`, `pool_pre_ping=True`
 
 ### 1.4 — Repository layer (optional but recommended)
 
-- [ ] Add `src/repositories/` with typed query methods:
+- [x] Add `src/repositories/` with typed query methods:
   - `UserRepository`, `ChatRepository`, `StudyPlanRepository`, `AgentRunRepository`
-- [ ] Keeps MCP tools and API routes thin; centralizes query logic
+- [x] Keeps MCP tools and API routes thin; centralizes query logic
 
 **Deliverable:** `alembic upgrade head` creates a correct schema; all DB access uses proper sessions.
 
@@ -187,53 +186,43 @@ Proposed `docker-compose.yml` services:
 
 ### 2.1 — Request/response schemas
 
-- [ ] Complete `src/serializers/backend.py` with proper Pydantic v2 models:
+- [x] Complete `src/serializers/backend.py` with proper Pydantic v2 models:
   - `RegisterRequest`, `LoginRequest`, `TokenResponse`
   - `UploadResponse`, `GenerateRequest`, `GenerateResponse`
   - `ChatResponse`, `NewChatResponse`, `StudyPlanResponse`
-- [ ] Replace bare query params with `Body()` models on all POST routes
-- [ ] Add response models (`response_model=`) to all endpoints
+- [x] Replace bare query params with `Body()` models on all POST routes
+- [x] Add response models (`response_model=`) to all endpoints
 
 ### 2.2 — Fix and complete endpoints
 
-| Endpoint | Work Required |
-|----------|---------------|
-| `POST /v1/register` | Use Pydantic body; return consistent error codes |
-| `POST /v1/login` | Persist tokens to `auth_tokens`; add `POST /v1/refresh` |
-| `POST /v1/upload` | Save `Document` record in Postgres; support TXT/DOCX loaders |
-| `GET /v1/new_chat` | Fix route prefix (`/v1/new_chat`); fix model fields |
-| `GET /v1/chats` | Implement: return messages for `chat_id` |
-| `GET /v1/chats` (list) | Add `GET /v1/chats` listing all user chats |
-| `POST /v1/generate` | Enqueue Celery task (Phase 3); return `task_id` |
-| `GET /v1/generate/{task_id}` | Poll async result |
-| `GET /v1/study-plans` | List user's study plans |
-| `GET /v1/study-plans/{id}` | Get single plan |
-| `GET /health` | Liveness: DB + Redis ping |
-| `GET /ready` | Readiness: all dependencies up |
+| Endpoint | Status |
+|----------|--------|
+| `POST /v1/register` | Done — Pydantic body, 409 on conflict |
+| `POST /v1/login` | Done — Pydantic body; token persistence deferred to Phase 6 |
+| `POST /v1/upload` | Done — saves `Document` records; TXT/DOCX supported |
+| `POST /v1/chats` | Done — replaces `GET /v1/new_chat` |
+| `GET /v1/chats` | Done — list all user chats |
+| `GET /v1/chats/{chat_id}` | Done — return messages for chat |
+| `POST /v1/generate` | Stub — returns 501 until Phase 3 Celery |
+| `GET /v1/tasks/{task_id}` | Stub — returns 501 until Phase 3 |
+| `GET /v1/study-plans` | Done |
+| `GET /v1/study-plans/{id}` | Done |
+| `GET /v1/me` | Done — current user profile |
+| `GET /health` | Done |
+| `GET /ready` | Done — DB + Redis check |
 
 ### 2.3 — Middleware and error handling
 
-- [ ] Add **CORS** middleware (configurable origins via env)
-- [ ] Add global exception handler returning consistent JSON errors
-- [ ] Add request ID middleware (`X-Request-ID` header)
-- [ ] Add structured logging (JSON format) with `request_id`, `user_id`, `path`
-- [ ] Rate limiting via `slowapi` or Redis-backed limiter on `/v1/login` and `/v1/generate`
+- [x] Add **CORS** middleware (configurable origins via env)
+- [x] Add global exception handler returning consistent JSON errors
+- [x] Add request ID middleware (`X-Request-ID` header)
+- [ ] Add structured logging (JSON format) with `request_id`, `user_id`, `path` — Phase 7
+- [x] Rate limiting via `slowapi` on `/v1/login` and `/v1/generate`
 
 ### 2.4 — API router modularization
 
-Split `src/core/api.py` into:
-
-```
-src/api/
-├── __init__.py      # app factory
-├── deps.py          # shared dependencies
-├── routes/
-│   ├── auth.py
-│   ├── upload.py
-│   ├── chat.py
-│   ├── generate.py
-│   └── health.py
-```
+- [x] Split into `src/api/routes/` — `auth`, `upload`, `chat`, `generate`, `health`, `study_plans`
+- [x] `src/core/api.py` kept as backward-compatible entrypoint
 
 **Deliverable:** OpenAPI docs at `/docs` are complete and accurate; all endpoints functional.
 
@@ -245,9 +234,9 @@ src/api/
 
 ### 3.1 — Redis setup
 
-- [ ] Add `redis:7-alpine` to docker-compose
-- [ ] Add settings: `REDIS_URL=redis://redis:6379/0`
-- [ ] Use Redis for:
+- [x] Add `redis:7-alpine` to docker-compose
+- [x] Add settings: `REDIS_URL=redis://redis:6379/0`
+- [x] Use Redis for:
   - **Celery broker** (db 0)
   - **Celery result backend** (db 1)
   - **JWT refresh token blocklist** (db 2, optional)
@@ -256,57 +245,36 @@ src/api/
 
 ### 3.2 — Celery application
 
-- [ ] Add `celery[redis]>=5.6` to dependencies
-- [ ] Create `src/worker/celery_app.py`:
-
-```python
-celery_app = Celery("course_planner")
-celery_app.config_from_object("src.worker.config")
-```
-
-- [ ] Configure:
-  - `task_serializer = "json"`
-  - `result_serializer = "json"`
-  - `task_acks_late = True`
-  - `task_reject_on_worker_lost = True`
-  - `worker_prefetch_multiplier = 1` (for long LLM tasks)
-  - Retry policy: `autoretry_for`, `max_retries=3`, exponential backoff
+- [x] Add `celery[redis]>=5.6` to dependencies
+- [x] Create `src/worker/celery_app.py` with `config_from_object("src.worker.config")`
+- [x] Configure serializers, acks_late, reject_on_worker_lost, prefetch, retry policy
 
 ### 3.3 — Task definitions
 
-| Task | Queue | Purpose |
-|------|-------|---------|
-| `ingest_documents` | `ingestion` | Chunk, embed, upsert to Pinecone |
-| `run_agent_pipeline` | `agents` | Execute planner/tutor/notes/critic chain |
-| `send_welcome_email` | `notifications` | Async SMTP |
-| `cleanup_temp_files` | `maintenance` | Periodic temp file cleanup |
+| Task | Queue | Status |
+|------|-------|--------|
+| `ingest_documents` | `ingestion` | Done |
+| `run_agent_pipeline` | `agents` | Done (stub pipeline → Phase 4) |
+| `send_welcome_email` | `notifications` | Done |
+| `cleanup_temp_files` | `maintenance` | Done |
 
 ### 3.4 — Wire API to Celery
 
-- [ ] `POST /v1/upload` → enqueue `ingest_documents`, return `task_id`
-- [ ] `POST /v1/generate` → enqueue `run_agent_pipeline`, return `task_id`
-- [ ] `GET /v1/tasks/{task_id}` → poll Celery result
-- [ ] `POST /v1/register` → enqueue `send_welcome_email`
+- [x] `POST /v1/upload` → enqueue `ingest_documents`, return `task_id`
+- [x] `POST /v1/generate` → enqueue `run_agent_pipeline`, return `task_id`
+- [x] `GET /v1/tasks/{task_id}` → poll Celery result
+- [x] `POST /v1/register` → enqueue `send_welcome_email`
 
 ### 3.5 — Celery Beat (scheduled tasks)
 
-- [ ] Expire old refresh tokens (daily)
-- [ ] Clean orphaned temp files in `data/` (hourly)
-- [ ] Health ping of MCP servers (every 5 min)
+- [x] Clean orphaned temp files in `data/` (hourly)
+- [ ] Expire old refresh tokens (daily) — Phase 6
+- [ ] Health ping of MCP servers (every 5 min) — Phase 7
 
 ### 3.6 — Worker Docker service
 
-```yaml
-worker:
-  build: .
-  command: celery -A src.worker.celery_app worker -Q ingestion,agents,notifications -c 4
-  depends_on: [db, redis]
-
-beat:
-  build: .
-  command: celery -A src.worker.celery_app beat
-  depends_on: [redis]
-```
+- [x] `worker` service with queues: ingestion, agents, notifications, maintenance
+- [x] `beat` service for scheduled tasks
 
 **Deliverable:** Document upload and agent generation run asynchronously; API returns immediately with task ID.
 
@@ -318,76 +286,45 @@ beat:
 
 ### 4.1 — MCP server fixes
 
-- [ ] **Fix port conflict:** `critic_server` → port 8004 (match `mcp_config.json`)
-- [ ] **Implement `notes_server.py`** on port 8005
-- [ ] Fix `orchestrator_server` name (`"tutor-server"` → `"orchestrator-server"`)
-- [ ] Extract MCP startup from `api.py`; run each server as its own process/container
-- [ ] Add MCP health endpoint or startup probe per server
-- [ ] Fix all MCP tools to use `get_db_session()` context manager
-
-### 4.2 — MCP tool inventory (target state)
-
-| Server | Port | Tools |
-|--------|------|-------|
-| orchestrator | 8001 | `get_user_history`, `get_study_plans`, `route_query` |
-| planner | 8002 | `save_plan`, `get_plan`, `get_agent_conversation` |
-| tutor | 8003 | `get_agent_conversation`, `search_documents` (RAG) |
-| critic | 8004 | `get_agent_conversation`, `save_test` |
-| notes | 8005 | `get_agent_conversation`, `save_notes` |
+- [x] **Fix port conflict:** `critic_server` → port 8004 (done in Phase 0)
+- [x] **Implement `notes_server.py`** on port 8005 (done in Phase 0)
+- [x] Fix `orchestrator_server` name (done in Phase 0)
+- [x] Extract MCP startup from `api.py`; separate containers (done in Phase 0)
+- [ ] Add MCP health endpoint or startup probe per server — Phase 7
+- [x] Fix all MCP tools to use `get_db_session()` context manager (done in Phase 1)
 
 ### 4.3 — Fix `McpConnector`
 
-Current bugs in `src/utils/mcp_utils/mcp_connect.py`:
-
-- [ ] `MCPDiscovery` is called with server name string but expects config file path
-- [ ] `tools.append[toolset]` should be `tools.append(toolset)`
-- [ ] `list[MCPToolset] = []` is invalid syntax
-- [ ] `_load_all_tools` is async but called from `__init__` synchronously
-
-Refactor to:
-
-```python
-class McpConnector:
-    async def connect(self, server_name: str) -> MCPToolset: ...
-    async def get_tool(self, server_name: str, tool_name: str): ...
-```
+- [x] Refactored to resolve server URLs from settings/env
+- [x] Removed broken ADK toolset loading from `__init__`
 
 ### 4.4 — Implement `AgentExecutor`
 
-Fill `src/agents/agent_executor.py`:
-
-- [ ] Maintain registry of agent name → handler
-- [ ] `send_message(sender, target, message)` → routes via A2A HTTP or direct call
-- [ ] Log all inter-agent messages to `agent_messages` table
-- [ ] Create `agent_runs` record per pipeline execution
+- [x] Registry of agent name → handler
+- [x] `send_message()` and `call_agent()` with async support
+- [x] Log inter-agent messages via callback to `agent_messages` table
+- [x] `agent_runs` record created per pipeline execution
 
 ### 4.5 — Complete agent implementations
 
-| Agent | Fixes Needed |
-|-------|-------------|
-| `BaseAgent` | Add `log_message()`, `log_run()` used by PlannerAgent; fix `DiscoveryClient.list_agent_cards` (sync vs async) |
-| `PlannerAgent` | Fix `McpConnector('critic_server')` → should not need critic MCP for planning; wire tutor/notes/critic as A2A calls |
-| `TutorAgent` | Fix `name="critic"` → `name="tutor"`; implement `explain()` using LLM + optional RAG |
-| `NotesAgent` | Implement `create_notes()` (called by Planner but missing) |
-| `CriticAgent` | Fix import `from src.utils.mcp_connect` → `mcp_utils.mcp_connect`; implement `create_test()` |
-| `OrchestratorAgent` | Wire to real `AgentExecutor` |
+| Agent | Status |
+|-------|--------|
+| `BaseAgent` | Done — uses `llm_client.generate()` |
+| `PlannerAgent` | Done — orchestrates via `AgentExecutor` |
+| `TutorAgent` | Done — `explain()` returns subtopics |
+| `NotesAgent` | Done — `create_notes()` returns structured notes |
+| `CriticAgent` | Done — `create_test()` returns Q&A |
+| `OrchestratorAgent` | Done — routes via `AgentExecutor` |
 
 ### 4.6 — Agent pipeline in Celery task
 
-```python
-@celery_app.task(bind=True, max_retries=3)
-def run_agent_pipeline(self, user_id, chat_id, query):
-    planner = PlannerAgent()
-    plan = asyncio.run(planner.create_plan(user_id, chat_id, query, run_id))
-    # persist AgentRun + return plan
-```
+- [x] `run_agent_pipeline` calls full `run_pipeline()` service
+- [x] Saves `StudyPlan`, updates `ChatHistory`, logs `AgentRun`
 
 ### 4.7 — A2A server
 
-- [ ] Implement `src/a2a_server/server.py` as standalone FastAPI app per agent
-- [ ] Each agent runs on its registry port (10002–10005)
-- [ ] Serve `/.well-known/agent.json` from each agent process
-- [ ] Remove boilerplate `task_manager.py` files (TellTimeAgent template)
+- [x] `src/a2a_server/server.py` serves `/.well-known/agent.json`
+- [x] Removed TellTimeAgent boilerplate `task_manager.py` files
 
 **Deliverable:** `POST /v1/generate` with topic "Linear Algebra" returns a complete study plan with topics, notes, and test questions.
 
@@ -399,29 +336,27 @@ def run_agent_pipeline(self, user_id, chat_id, query):
 
 ### 5.1 — Complete file format support
 
-- [ ] Add `TextLoader` for `.txt`
-- [ ] Add `Docx2txtLoader` or `UnstructuredWordDocumentLoader` for `.docx`
-- [ ] Validate file size limits (e.g. 50 MB per file, 200 MB per request)
-- [ ] Virus scan hook (optional, ClamAV sidecar)
+- [x] Add `TextLoader` for `.txt` (done in Phase 2)
+- [x] Add `Docx2txtLoader` for `.docx` (done in Phase 2)
+- [x] Validate file size limits (50 MB per file, 200 MB per request)
+- [ ] Virus scan hook (optional, ClamAV sidecar) — deferred
 
 ### 5.2 — User-scoped vector search
 
-- [ ] Namespace Pinecone vectors by `user_id`
-- [ ] Add metadata filter on all retrievals: `{"user_id": str(user_id)}`
-- [ ] Add `search_documents(user_id, query, top_k)` utility for TutorAgent RAG
+- [x] Namespace Pinecone vectors by `user_id`
+- [x] Add metadata filter on all retrievals: `{"user_id": str(user_id)}`
+- [x] Add `search_documents(user_id, query, top_k)` utility for TutorAgent RAG
 
 ### 5.3 — Ingestion reliability
 
-- [ ] Move ingestion to Celery `ingest_documents` task (Phase 3)
-- [ ] Track ingestion status on `Document` model: `pending | processing | completed | failed`
-- [ ] Store chunk count and error message on document record
-- [ ] Retry failed ingestions with exponential backoff
+- [x] Ingestion via Celery `ingest_documents` task
+- [x] Track ingestion status on `Document` model: `pending | processing | completed | failed`
+- [x] Store chunk count and error message on document record
+- [x] Retry failed ingestions with exponential backoff (Celery autoretry)
 
 ### 5.4 — Object storage (optional, recommended for prod)
 
-- [ ] Replace local `data/{user_id}/` with S3/GCS/MinIO
-- [ ] Store `file_path` as object key, not local path
-- [ ] Pre-signed URLs for download if needed
+- [ ] Replace local `data/{user_id}/` with S3/GCS/MinIO — deferred
 
 **Deliverable:** Upload PDF/TXT/DOCX → async processing → TutorAgent can retrieve relevant chunks for a query.
 

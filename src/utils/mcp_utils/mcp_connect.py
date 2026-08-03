@@ -1,36 +1,35 @@
-from mcp_discovery import MCPDiscovery
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
-from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
+from src.settings import settings
+from src.utils.mcp_utils.mcp_discovery import MCPDiscovery
+
+MCP_URL_MAP = {
+    "orchestrator_server": settings.MCP_ORCHESTRATOR_URL,
+    "planner_server": settings.MCP_PLANNER_URL,
+    "tutor_server": settings.MCP_TUTOR_URL,
+    "critic_server": settings.MCP_CRITIC_URL,
+    "notes_server": settings.MCP_NOTES_URL,
+}
+
 
 class McpConnector:
-
-    def __init__(self, config_file, server_name=None):
+    def __init__(self, server_name: str | None = None, config_file: str | None = None):
         self.discovery = MCPDiscovery(config_file=config_file)
-        self.tools = list[MCPToolset] = []
-        self._load_all_tools()
         self.server_name = server_name
+        self._connected = False
 
-    async def _load_all_tools(self):
-        tools = []
-        try:
-            for server_name, server_info in self.discovery.list_servers():
-                if self.server_name != server_name:
-                    continue
-                conn = StreamableHTTPServerParams(url=server_info["args"][0])
-                
-                toolset = MCPToolset(connection_params=conn)
-                tool = await toolset.get_tools()
+    def get_server_url(self, server_name: str | None = None) -> str:
+        name = server_name or self.server_name
+        if not name:
+            raise ValueError("server_name is required")
+        if name in MCP_URL_MAP:
+            return MCP_URL_MAP[name]
+        servers = self.discovery.list_servers()
+        if name not in servers:
+            raise ValueError(f"Unknown MCP server: {name}")
+        return servers[name]["args"][0]
 
-                tools.append[toolset]
-            self.tools = tools
+    async def connect(self) -> str:
+        self._connected = True
+        return self.get_server_url()
 
-        except Exception as e:
-            raise Exception(f"Failed to load MCP tools: {str(e)}")
-    
-    def get_tools(self):
-        return self.tools.copy()
-    
-    async def refresh_tools(self):
-        self.tools = []
-        await self._load_all_tools()
-        return self.tools.copy()
+    def is_connected(self) -> bool:
+        return self._connected
