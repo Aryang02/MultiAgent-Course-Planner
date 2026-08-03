@@ -11,7 +11,10 @@ def test_generate_uses_default_model():
     mock_response.usage = MagicMock(prompt_tokens=5, completion_tokens=7)
 
     with patch.object(llm_client.settings, "LLM_MODEL", "gemini/gemini-1.5-pro"):
-        with patch("src.agents.llm_client.litellm.completion", return_value=mock_response) as mock_completion:
+        with patch(
+            "src.agents.llm_client.litellm.completion",
+            return_value=mock_response,
+        ) as mock_completion:
             with patch.object(llm_client, "record_llm_tokens") as mock_record:
                 result = llm_client.generate("system", "prompt")
 
@@ -27,7 +30,10 @@ def test_generate_uses_custom_model():
     mock_response.choices = [MagicMock(message=MagicMock(content="response"))]
     mock_response.usage = None
 
-    with patch("src.agents.llm_client.litellm.completion", return_value=mock_response) as mock_completion:
+    with patch(
+        "src.agents.llm_client.litellm.completion",
+        return_value=mock_response,
+    ) as mock_completion:
         result = llm_client.generate("system", "prompt", model="gpt-4o")
 
     assert result == "response"
